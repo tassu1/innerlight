@@ -1,0 +1,162 @@
+.dashboard {
+  background-color: #f5f8fa;
+  min-height: 100vh;
+  min-width: 100vw;
+  color: black;
+}
+
+.dashboard-container {
+  max-width: 1000px;
+  margin: auto;
+  padding: 20px;
+}
+
+/* Responsive Grid for Mood Cards */
+.mood-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.greeting {
+  font-size: 28px;
+  margin-bottom: 5px;
+  color: black;
+}
+
+.quote {
+  font-style: italic;
+  margin-bottom: 30px;
+  color: #555;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.mood-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.mood-form select,
+.mood-form input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.btn {
+  background-color: #6a9bf4;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.btn:hover {
+  background-color: #588de0;
+}
+
+.error {
+  color: red;
+  font-size: 14px;
+}
+
+.success {
+  color: green;
+}
+
+/* Responsive Widget Area */
+.bottom-widgets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.widget {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Chatbot Image Fill Fix */
+.widget.chatbot .chatbot-image-container {
+  flex-grow: 1;
+  margin: 10px 0;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.widget.chatbot .chatbot-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 8px;
+}
+/* Journal image covers widget area nicely */
+.widget.journal .journal-image-container {
+  flex-grow: 1;
+  margin: 10px 0;
+  overflow: hidden;
+  border-radius: 8px;
+  height: 200px; /* adjust as needed */
+}
+
+.widget.journal .journal-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 8px;
+}
+
+/* Responsive text sizing */
+@media (max-width: 768px) {
+  .greeting {
+    font-size: 24px;
+  }
+
+  .quote {
+    font-size: 14px;
+  }
+
+  .btn {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 15px;
+  }
+
+  .card,
+  .widget {
+    padding: 15px;
+  }
+
+  .greeting {
+    font-size: 20px;
+  }
+
+  .quote {
+    font-size: 13px;
+  }
+}

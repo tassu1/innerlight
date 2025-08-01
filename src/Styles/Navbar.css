@@ -1,0 +1,140 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #282c34;
+  color: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.nav-left h2 {
+  cursor: pointer;
+  font-size: 22px;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  position: relative;
+}
+
+.nav-icon {
+  cursor: pointer;
+  position: relative;
+}
+
+.dropdown {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  background: #ffffff;
+  color: #000;
+  padding: 10px;
+  border-radius: 6px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+  min-width: 160px;
+  z-index: 999;
+}
+
+.profile-dropdown p {
+  padding: 8px 10px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.profile-dropdown p:hover {
+  background-color: #f0f0f0;
+}
+.notif-badge {
+  background: red;
+  color: white;
+  font-size: 10px;
+  border-radius: 50%;
+  padding: 2px 6px;
+  position: absolute;
+  top: -5px;
+  right: -5px;
+}
+
+.notif-dropdown {
+  width: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.dropdown-title {
+  font-weight: bold;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.notif-item {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  transition: background 0.3s;
+}
+
+.notif-item:hover {
+  background-color: #f2f2f2;
+}
+
+.notif-item.unread {
+  background-color: #eaf3ff;
+  font-weight: 500;
+}
+
+.notif-empty {
+  padding: 10px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+.nav-search {
+  flex: 1;
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.search-box {
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  width: 250px;
+  gap: 6px;
+}
+
+.search-box input {
+  border: none;
+  outline: none;
+  flex: 1;
+}
+
+.search-results {
+  position: absolute;
+  top: 35px;
+  background: white;
+  border: 1px solid #ccc;
+  width: 250px;
+  max-height: 200px;
+  overflow-y: auto;
+  border-radius: 6px;
+  z-index: 999;
+}
+
+.search-result-item {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.search-result-item:hover {
+  background-color: #f0f0f0;
+}
