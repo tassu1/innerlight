@@ -11,10 +11,21 @@ import {
   Area
 } from 'recharts';
 
-const MoodChart = () => {
+const MoodChart = ({ theme }) => {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Default theme if not provided
+  const defaultTheme = {
+    primary: "#FF7E6B",
+    secondary: "#2F4858",
+    dark: "#2A2D34",
+    light: "#F7F4EA",
+    accent: "#FF9E90"
+  };
+  
+  const currentTheme = theme || defaultTheme;
 
   const generateDefaultData = () => {
     const defaultData = [];
@@ -37,14 +48,12 @@ const MoodChart = () => {
   useEffect(() => {
     const fetchMoodData = async () => {
       try {
-        const token = localStorage.getItem("token"); // Or replace with your actual key
+        const token = localStorage.getItem("token");
         const response = await axios.get('/api/moods/history', {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
-
-        console.log("Mood API response:", response.data); // 👈 Debug log
 
         if (!response.data || !Array.isArray(response.data)) {
           throw new Error('API returned invalid data format');
@@ -84,56 +93,119 @@ const MoodChart = () => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="custom-tooltip">
-          <p className="label">{data.fullDate ? new Date(data.fullDate).toLocaleDateString() : label}</p>
-          <p className="intro">Mood: {data.mood}/5</p>
+        <div 
+          className="p-3 rounded-lg shadow-md"
+          style={{
+            backgroundColor: currentTheme.light,
+            border: `1px solid ${currentTheme.primary}`
+          }}
+        >
+          <p className="font-medium" style={{ color: currentTheme.dark }}>
+            {data.fullDate ? new Date(data.fullDate).toLocaleDateString() : label}
+          </p>
+          <p style={{ color: currentTheme.primary }}>
+            Mood: {data.mood}/5
+          </p>
         </div>
       );
     }
     return null;
   };
 
+  const getMoodColor = (value) => {
+    if (value <= 1) return '#EF4444'; // Red for very low
+    if (value <= 2) return '#F59E0B'; // Orange for low
+    if (value <= 3) return '#10B981'; // Green for neutral
+    if (value <= 4) return '#3B82F6'; // Blue for good
+    return '#8B5CF6'; // Purple for great
+  };
+
+  const CustomizedDot = (props) => {
+    const { cx, cy, payload } = props;
+    return (
+      <circle
+        cx={cx}
+        cy={cy}
+        r={6}
+        fill={getMoodColor(payload.mood)}
+        stroke={currentTheme.light}
+        strokeWidth={2}
+      />
+    );
+  };
+
+  const CustomizedActiveDot = (props) => {
+    const { cx, cy } = props;
+    return (
+      <circle
+        cx={cx}
+        cy={cy}
+        r={8}
+        fill={currentTheme.primary}
+        stroke={currentTheme.light}
+        strokeWidth={2}
+      />
+    );
+  };
+
   return (
-    <div className="chart-container">
+    <div className="chart-container h-full w-full">
       {loading ? (
-        <div className="chart-loading">Loading your mood history...</div>
+        <div 
+          className="flex items-center justify-center h-full"
+          style={{ color: currentTheme.secondary }}
+        >
+          Loading your mood history...
+        </div>
       ) : (
-        <ResponsiveContainer width="100%" height={250}>
+        <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={chartData}
             margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+            <CartesianGrid 
+              strokeDasharray="3 3" 
+              stroke={currentTheme.secondary}
+              opacity={0.2}
+            />
             <XAxis
               dataKey="day"
-              tick={{ fill: '#555' }}
+              tick={{ fill: currentTheme.secondary }}
+              tickLine={{ stroke: currentTheme.secondary }}
             />
             <YAxis
               domain={[1, 5]}
-              tick={{ fill: '#555' }}
+              tick={{ fill: currentTheme.secondary }}
+              tickLine={{ stroke: currentTheme.secondary }}
               tickCount={5}
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip 
+              content={<CustomTooltip />}
+              wrapperStyle={{ zIndex: 100 }}
+            />
             <Area
               type="monotone"
               dataKey="mood"
-              stroke="#6a9bf4"
-              fill="#6a9bf4"
+              stroke={currentTheme.primary}
+              fill={currentTheme.primary}
               fillOpacity={0.1}
             />
             <Line
               type="monotone"
               dataKey="mood"
-              stroke="#6a9bf4"
-              strokeWidth={2}
-              dot={{ r: 4, fill: '#6a9bf4' }}
-              activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }}
+              stroke={currentTheme.primary}
+              strokeWidth={3}
+              dot={<CustomizedDot />}
+              activeDot={<CustomizedActiveDot />}
             />
           </LineChart>
         </ResponsiveContainer>
       )}
       {error && (
-        <div className="chart-error">
+        <div 
+          className="text-center text-sm p-2"
+          style={{ color: currentTheme.accent }}
+        >
           Couldn't load recent mood data. Showing placeholder.
         </div>
       )}

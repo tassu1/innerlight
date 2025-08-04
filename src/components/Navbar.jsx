@@ -287,7 +287,7 @@ useEffect(() => {
   return (
     <>
       <nav 
-        className="fixed top-0 left-0 h-16 w-full z-50 px-4 sm:px-6 py-3 backdrop-blur-sm bg-opacity-90"
+        className="fixed w-full z-50 px-4 sm:px-6 py-3 backdrop-blur-sm bg-opacity-90"
         style={{
           backgroundColor: `${THEME.dark}EE`,
           borderBottom: `1px solid ${THEME.primary}30`
@@ -343,7 +343,7 @@ useEffect(() => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Home size={18} />
+              
               <span className="text-sm">Home</span>
             </motion.button>
 
@@ -354,7 +354,7 @@ useEffect(() => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Bot size={18} />
+             
               <span className="text-sm">Chatbot</span>
             </motion.button>
 
@@ -365,7 +365,7 @@ useEffect(() => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <MessageCircle size={18} />
+              
               <span className="text-sm">Community</span>
             </motion.button>
 
@@ -376,7 +376,7 @@ useEffect(() => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Bookmark size={18} />
+              
               <span className="text-sm">Resources</span>
             </motion.button>
 
@@ -387,7 +387,7 @@ useEffect(() => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <BookOpen size={18} />
+              
               <span className="text-sm">Journaling</span>
             </motion.button>
           </div>
@@ -718,3 +718,5 @@ useEffect(() => {
 };
 
 export default Navbar;
+
+
