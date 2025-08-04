@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import MoodChart from "../components/MoodChart";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -71,7 +69,7 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard">
-      <Navbar />
+      
       <div className="dashboard-container">
         <h2>Hello There! 👋</h2>
         <p className="quote">{quote}</p>
@@ -136,7 +134,7 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
-      <Footer />
+   
     </div>
   );
 };

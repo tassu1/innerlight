@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import "../Styles/Profile.css";
 
 const Profile = () => {
@@ -57,7 +55,7 @@ const Profile = () => {
 
   return (
     <div className="other-user-wrapper">
-      <Navbar />
+      
 
       <div className="profile-container">
         <div className="profile-header">
@@ -113,7 +111,7 @@ const Profile = () => {
         )}
       </div>
 
-      <Footer />
+  
     </div>
   );
 };

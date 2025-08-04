@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import "../Styles/OtherUserProfile.css";
 
 const OtherUserProfile = () => {
@@ -41,7 +39,7 @@ const OtherUserProfile = () => {
 
   return (
     <div className="other-user-wrapper">
-      <Navbar />
+    
 
       <div className="profile-container">
         {user && (
@@ -81,7 +79,7 @@ const OtherUserProfile = () => {
         )}
       </div>
 
-      <Footer />
+    
     </div>
   );
 };

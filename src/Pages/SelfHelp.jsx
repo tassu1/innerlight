@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import "../Styles/SelfHelp.css";
 
 const SelfHelp = () => {
@@ -30,7 +28,7 @@ const SelfHelp = () => {
 
   return (
     <>
-      <Navbar />
+      
 
       <div className="selfhelp-container">
         <h2>📚 Self-Help Library</h2>
@@ -94,7 +92,7 @@ const SelfHelp = () => {
         </div>
       </div>
 
-      <Footer />
+ 
     </>
   );
 };

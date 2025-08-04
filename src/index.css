@@ -1,1 +1,31 @@
 @import "tailwindcss";
+
+
+/* Force scrollbar and prevent white gaps */
+html {
+  overflow-y: scroll;
+  background-color: #2A2D34; /* Your THEME.dark color */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #2A2D34; /* Match navbar color */
+  overflow-x: hidden;
+}
+
+
+/* Style the scrollbar to match your theme */
+::-webkit-scrollbar {
+  width: 8px;
+  background-color: #2A2D34;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #FF7E6B; /* Your THEME.primary */
+  border-radius: 4px;
+}
+
+html, body, #root {
+  height: 100%;
+}

@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import axios from "axios";
 import "../Styles/Journal.css";
 
@@ -83,7 +81,7 @@ const Journal = () => {
 
   return (
     <div className="journal-wrapper">
-      <Navbar />
+   
       <div className="journal-page">
         <h2 className="journal-heading">Dear Diary 📖</h2>
 
@@ -122,7 +120,7 @@ const Journal = () => {
           )}
         </div>
       </div>
-      <Footer />
+      
     </div>
   );
 };

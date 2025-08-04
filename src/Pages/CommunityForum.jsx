@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "../Styles/CommunityForum.css";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import { formatDistanceToNow } from "date-fns";
 
 const CommunityForum = () => {
@@ -127,7 +125,7 @@ const CommunityForum = () => {
 
   return (
     <div className="forum-wrapper">
-      <Navbar />
+  
       <div className="forum-container">
         <div className="new-post">
           <textarea
@@ -235,7 +233,7 @@ const CommunityForum = () => {
           </button>
         )}
       </div>
-      <Footer />
+      
     </div>
   );
 };

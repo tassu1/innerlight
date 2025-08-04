@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import axios from "axios";
 import "../Styles/Chatbot.css";
 
@@ -81,7 +79,7 @@ const Chatbot = () => {
 
   return (
     <div className="chatbot-wrapper">
-      <Navbar />
+     
       <div className="chatbot-container">
         <h2 className="chatbot-title">Talk to InnerLight 🧠</h2>
         <div className="chatbox">
@@ -112,7 +110,7 @@ const Chatbot = () => {
           <button onClick={sendMessage} className="send-btn">Send</button>
         </div>
       </div>
-      <Footer />
+      
     </div>
   );
 };

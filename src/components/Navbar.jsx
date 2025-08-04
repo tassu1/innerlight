@@ -8,6 +8,8 @@ import {
   User,
   Bookmark,
   Heart,
+  Handshake,
+  LampDesk,
   LogIn,
   UserPlus,
   ChevronDown,
@@ -173,14 +175,21 @@ useEffect(() => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <motion.div 
-              animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity, repeatType: "reverse" }}
+             <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              transition={{ 
+                duration: 0.5,
+                repeat: 1,
+                repeatType: "mirror"
+              }}
+              className="p-3 rounded-full mb-3"
+              style={{ 
+                backgroundColor: `${THEME.primary}20`,
+                boxShadow: `0 0 0 4px ${THEME.primary}10`
+              }}
             >
-              <Heart 
-                className="w-6 h-6 group-hover:scale-110 transition-transform"
-                style={{ color: THEME.primary }} 
-              />
+              <LampDesk size={19} style={{ color: THEME.primary }} />
             </motion.div>
             <span 
               className="text-xl font-bold"
@@ -278,7 +287,7 @@ useEffect(() => {
   return (
     <>
       <nav 
-        className="fixed w-full z-50 px-4 sm:px-6 py-3 backdrop-blur-sm bg-opacity-90"
+        className="fixed top-0 left-0 h-16 w-full z-50 px-4 sm:px-6 py-3 backdrop-blur-sm bg-opacity-90"
         style={{
           backgroundColor: `${THEME.dark}EE`,
           borderBottom: `1px solid ${THEME.primary}30`
@@ -300,14 +309,22 @@ useEffect(() => {
               onClick={() => navigate("/dashboard")}
               whileHover={{ scale: 1.05 }}
             >
-              <motion.div 
-                className="p-2 rounded-xl group-hover:bg-theme-primary/10 transition-all"
-                style={{ color: THEME.primary }}
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity, repeatType: "reverse" }}
-              >
-                <Heart className="w-6 h-6 transition-transform group-hover:scale-110" />
-              </motion.div>
+               <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              transition={{ 
+                duration: 0.5,
+                repeat: 1,
+                repeatType: "mirror"
+              }}
+              className="p-3 rounded-full mb-3"
+              style={{ 
+                backgroundColor: `${THEME.primary}20`,
+                boxShadow: `0 0 0 4px ${THEME.primary}10`
+              }}
+            >
+              <LampDesk size={18} style={{ color: THEME.primary }} />
+            </motion.div>
               <span 
                 className="text-xl font-bold hidden sm:block"
                 style={{ color: THEME.light }}
@@ -364,7 +381,7 @@ useEffect(() => {
             </motion.button>
 
             <motion.button
-              onClick={() => navigate("/journaling")}
+              onClick={() => navigate("/journal")}
               className="px-3 py-2 rounded-lg flex items-center gap-2 hover:bg-theme-primary/10 transition-colors"
               style={{ color: THEME.light }}
               whileHover={{ scale: 1.05 }}
