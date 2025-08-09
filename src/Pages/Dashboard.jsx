@@ -190,7 +190,7 @@ const Dashboard = () => {
         <motion.div 
           className="rounded-2xl p-6 mb-8"
           style={{ 
-            background: `linear-gradient(135deg, ${THEME.secondary} 0%, ${THEME.dark} 100%)`,
+            background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.dark} 100%)`,
             boxShadow: `0 4px 20px rgba(0,0,0,0.1)`
           }}
           initial={{ opacity: 0, y: -20 }}
