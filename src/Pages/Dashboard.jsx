@@ -4,23 +4,22 @@ import {
   BarChart2, BookOpen, Users, MessageSquare,
   RefreshCw, Sparkles, ChevronRight, Activity,
   Calendar, TrendingUp, TrendingDown, ChevronDown,
-  ChevronUp, Zap, Bot
+  ChevronUp, Zap, Bot, Menu, Search, Bell
 } from "lucide-react";
 import MoodChart from "../components/MoodChart";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
-// Your exact theme colors
 const THEME = {
-  primary: "#FF7E6B",
-  secondary: "#2F4858",
-  dark: "#2A2D34",
-  light: "#F7F4EA",
-  accent: "#FF9E90"
+  primary: "#E76F51",       // Vibrant coral for accents
+  secondary: "#2B2B2B",     // Charcoal for backgrounds
+  dark: "#1A1A1A",          // Darker charcoal for text
+  light: "#F6F1E9",         // Soft cream for cards
+  accentPrimary: "#F4A261", // Sunset orange
+  accentSecondary: "#E9C46A"// Muted gold
 };
 
-// Mood level colors
 const moodColors = {
   1: "#F87171",
   2: "#FBBF24",
@@ -173,7 +172,7 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: THEME.dark }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: THEME.secondary }}>
         <div className="animate-pulse flex items-center gap-2" style={{ color: THEME.primary }}>
           <Zap className="w-5 h-5 animate-pulse" />
           <span>Loading your dashboard...</span>
@@ -183,33 +182,35 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: THEME.dark, color: THEME.light }}>
+    <div className="min-h-screen" style={{ backgroundColor: THEME.light }}>
+      {/* Charcoal Top Bar */}
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Header */}
         <motion.div 
-          className="rounded-2xl p-6 mb-8 border"
+          className="rounded-2xl p-6 mb-8"
           style={{ 
-            background: `linear-gradient(to right, ${THEME.primary}10, ${THEME.primary}05)`,
-            borderColor: `${THEME.primary}20`
+            background: `linear-gradient(135deg, ${THEME.secondary} 0%, ${THEME.dark} 100%)`,
+            boxShadow: `0 4px 20px rgba(0,0,0,0.1)`
           }}
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.4 }}
         >
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold mb-1">
-                Welcome back, <span style={{ color: THEME.primary }}>{dashboardData.userName}</span> <span style={{ color: THEME.primary }}>👋</span>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
+                Welcome back, {dashboardData.userName} 👋
               </h1>
-              <p className="opacity-80 italic">
+              <p className="text-white/90 italic">
                 {dashboardData.quote}
               </p>
             </div>
             <div className="flex items-center gap-2">
               <div className="px-3 py-1 rounded-full text-xs flex items-center gap-1"
                 style={{ 
-                  backgroundColor: dashboardData.stats.moodTrend === 'up' ? `${THEME.primary}20` : '#FECDD320',
-                  color: dashboardData.stats.moodTrend === 'up' ? THEME.primary : '#F43F5E'
+                  backgroundColor: dashboardData.stats.moodTrend === 'up' ? `${THEME.accentSecondary}20` : '#FECDD320',
+                  color: dashboardData.stats.moodTrend === 'up' ? THEME.accentSecondary : '#F43F5E'
                 }}
               >
                 {dashboardData.stats.moodTrend === 'up' ? (
@@ -232,27 +233,29 @@ const Dashboard = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {/* Mood Stats Card */}
           <motion.div 
-            className="rounded-xl p-4 border"
+            className="rounded-xl p-4"
             style={{ 
-              backgroundColor: `${THEME.secondary}80`,
-              borderColor: `${THEME.primary}20`
+              backgroundColor: THEME.light,
+              boxShadow: `0 2px 10px rgba(0,0,0,0.05)`
             }}
             whileHover={{ y: -5 }}
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm opacity-80">Weekly Avg</span>
+              <span className="text-sm" style={{ color: THEME.secondary }}>Weekly Avg</span>
               <BarChart2 className="w-4 h-4" style={{ color: THEME.primary }} />
             </div>
             <div className="flex items-end gap-2">
-              <span className="text-2xl font-bold">{dashboardData.stats.weeklyAvgMood.toFixed(1)}</span>
-              <span className="text-xs opacity-60 mb-1">/5</span>
+              <span className="text-2xl font-bold" style={{ color: THEME.dark }}>
+                {dashboardData.stats.weeklyAvgMood.toFixed(1)}
+              </span>
+              <span className="text-xs mb-1" style={{ color: THEME.secondary }}>/5</span>
             </div>
-            <div className="h-2 mt-2 rounded-full overflow-hidden" style={{ backgroundColor: `${THEME.dark}20` }}>
+            <div className="h-2 mt-2 rounded-full overflow-hidden bg-white">
               <div 
                 className="h-full rounded-full" 
                 style={{ 
                   width: `${(dashboardData.stats.weeklyAvgMood / 5) * 100}%`,
-                  backgroundColor: THEME.primary 
+                  background: `linear-gradient(90deg, ${THEME.primary}, ${THEME.accentPrimary})`
                 }}
               />
             </div>
@@ -260,20 +263,22 @@ const Dashboard = () => {
 
           {/* Journal Streak Card */}
           <motion.div 
-            className="rounded-xl p-4 border"
+            className="rounded-xl p-4"
             style={{ 
-              backgroundColor: `${THEME.secondary}80`,
-              borderColor: `${THEME.primary}20`
+              backgroundColor: THEME.light,
+              boxShadow: `0 2px 10px rgba(0,0,0,0.05)`
             }}
             whileHover={{ y: -5 }}
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm opacity-80">Journal Streak</span>
+              <span className="text-sm" style={{ color: THEME.secondary }}>Journal Streak</span>
               <BookOpen className="w-4 h-4" style={{ color: THEME.primary }} />
             </div>
             <div className="flex items-end gap-2">
-              <span className="text-2xl font-bold">{dashboardData.stats.journalStreak}</span>
-              <span className="text-xs opacity-60 mb-1">days</span>
+              <span className="text-2xl font-bold" style={{ color: THEME.dark }}>
+                {dashboardData.stats.journalStreak}
+              </span>
+              <span className="text-xs mb-1" style={{ color: THEME.secondary }}>days</span>
             </div>
             <div className="flex gap-1 mt-2">
               {[...Array(7)].map((_, i) => (
@@ -281,7 +286,7 @@ const Dashboard = () => {
                   key={i} 
                   className="h-1 flex-1 rounded-full"
                   style={{ 
-                    backgroundColor: i < dashboardData.stats.journalStreak ? THEME.primary : `${THEME.dark}20`
+                    backgroundColor: i < dashboardData.stats.journalStreak ? THEME.primary : `${THEME.secondary}20`
                   }}
                 />
               ))}
@@ -290,30 +295,32 @@ const Dashboard = () => {
 
           {/* Community Engagement Card */}
           <motion.div 
-            className="rounded-xl p-4 border"
+            className="rounded-xl p-4"
             style={{ 
-              backgroundColor: `${THEME.secondary}80`,
-              borderColor: `${THEME.primary}20`
+              backgroundColor: THEME.light,
+              boxShadow: `0 2px 10px rgba(0,0,0,0.05)`
             }}
             whileHover={{ y: -5 }}
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm opacity-80">Community</span>
+              <span className="text-sm" style={{ color: THEME.secondary }}>Community</span>
               <Users className="w-4 h-4" style={{ color: THEME.primary }} />
             </div>
             <div className="flex items-end gap-2">
-              <span className="text-2xl font-bold">{dashboardData.stats.communityEngagement}</span>
-              <span className="text-xs opacity-60 mb-1">interactions</span>
+              <span className="text-2xl font-bold" style={{ color: THEME.dark }}>
+                {dashboardData.stats.communityEngagement}
+              </span>
+              <span className="text-xs mb-1" style={{ color: THEME.secondary }}>interactions</span>
             </div>
             <div className="mt-2">
-              <div className="text-xs opacity-60 flex items-center gap-1">
+              <div className="text-xs flex items-center gap-1" style={{ color: THEME.secondary }}>
                 <span>Top {dashboardData.stats.communityPercentile}%</span>
-                <div className="w-8 h-1 rounded-full overflow-hidden" style={{ backgroundColor: `${THEME.dark}20` }}>
+                <div className="w-8 h-1 rounded-full overflow-hidden bg-white">
                   <div 
                     className="h-full rounded-full" 
                     style={{ 
                       width: `${dashboardData.stats.communityPercentile}%`,
-                      backgroundColor: THEME.primary 
+                      background: `linear-gradient(90deg, ${THEME.primary}, ${THEME.accentPrimary})`
                     }}
                   />
                 </div>
@@ -323,24 +330,26 @@ const Dashboard = () => {
 
           {/* AI Sessions Card */}
           <motion.div 
-            className="rounded-xl p-4 border"
+            className="rounded-xl p-4"
             style={{ 
-              backgroundColor: `${THEME.secondary}80`,
-              borderColor: `${THEME.primary}20`
+              backgroundColor: THEME.light,
+              boxShadow: `0 2px 10px rgba(0,0,0,0.05)`
             }}
             whileHover={{ y: -5 }}
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm opacity-80">AI Sessions</span>
+              <span className="text-sm" style={{ color: THEME.secondary }}>AI Sessions</span>
               <MessageSquare className="w-4 h-4" style={{ color: THEME.primary }} />
             </div>
             <div className="flex items-end gap-2">
-              <span className="text-2xl font-bold">{dashboardData.stats.aiSessions}</span>
-              <span className="text-xs opacity-60 mb-1">this month</span>
+              <span className="text-2xl font-bold" style={{ color: THEME.dark }}>
+                {dashboardData.stats.aiSessions}
+              </span>
+              <span className="text-xs mb-1" style={{ color: THEME.secondary }}>this month</span>
             </div>
             <div className="mt-2">
               <div className="text-xs" style={{ 
-                color: dashboardData.stats.aiSessionsChange >= 0 ? THEME.primary : '#F43F5E'
+                color: dashboardData.stats.aiSessionsChange >= 0 ? THEME.accentSecondary : '#F43F5E'
               }}>
                 {dashboardData.stats.aiSessionsChange >= 0 ? '+' : ''}
                 {dashboardData.stats.aiSessionsChange} from last week
@@ -355,23 +364,24 @@ const Dashboard = () => {
           <div className="space-y-6">
             {/* Mood Tracker Card */}
             <motion.div 
-              className="rounded-xl p-6 border"
+              className="rounded-xl p-6"
               style={{ 
-                backgroundColor: `${THEME.secondary}80`,
-                borderColor: `${THEME.primary}20`
+                backgroundColor: THEME.light,
+                boxShadow: `0 2px 10px rgba(0,0,0,0.05)`
               }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
             >
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
+                <h2 className="text-lg font-semibold flex items-center gap-2" style={{ color: THEME.dark }}>
                   <Smile className="w-5 h-5" style={{ color: THEME.primary }} />
                   Daily Mood Check
                 </h2>
                 <button 
                   onClick={fetchDashboardData}
-                  className="text-xs flex items-center gap-1 opacity-70 hover:opacity-100"
+                  className="text-xs flex items-center gap-1"
+                  style={{ color: THEME.secondary }}
                 >
                   <RefreshCw className="w-3 h-3" />
                   Refresh
@@ -382,15 +392,18 @@ const Dashboard = () => {
                 <div className="text-center py-4">
                   <div 
                     className="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: `${THEME.primary}20` }}
+                    style={{ 
+                      background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.accentPrimary} 100%)`,
+                      boxShadow: `0 4px 10px ${THEME.primary}30`
+                    }}
                   >
-                    <Heart className="w-6 h-6" style={{ color: THEME.primary }} />
+                    <Heart className="w-6 h-6 text-white" />
                   </div>
                   <p className="mb-2" style={{ color: THEME.primary }}>You've logged your mood today!</p>
                   <button 
                     onClick={() => setDashboardData(prev => ({ ...prev, alreadyLogged: false }))}
                     className="text-xs hover:underline"
-                    style={{ color: THEME.accent }}
+                    style={{ color: THEME.accentPrimary }}
                   >
                     Want to update?
                   </button>
@@ -402,8 +415,9 @@ const Dashboard = () => {
                       onClick={() => setShowMoodForm(true)}
                       className="w-full py-3 rounded-lg font-medium flex items-center justify-center gap-2"
                       style={{ 
-                        backgroundColor: `${THEME.primary}20`,
-                        color: THEME.primary
+                        background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.accentPrimary} 100%)`,
+                        color: 'white',
+                        boxShadow: `0 2px 10px ${THEME.primary}30`
                       }}
                     >
                       <Smile className="w-5 h-5" />
@@ -419,7 +433,7 @@ const Dashboard = () => {
                             className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
                             style={{
                               backgroundColor: dashboardData.moodLevel === level.toString() ? `${moodColors[level]}20` : 'transparent',
-                              color: dashboardData.moodLevel === level.toString() ? moodColors[level] : THEME.light,
+                              color: dashboardData.moodLevel === level.toString() ? moodColors[level] : THEME.dark,
                               transform: dashboardData.moodLevel === level.toString() ? 'scale(1.1)' : 'scale(1)',
                               opacity: dashboardData.moodLevel === level.toString() ? 1 : 0.7
                             }}
@@ -431,7 +445,7 @@ const Dashboard = () => {
                         ))}
                       </div>
                       <div className="mb-4">
-                        <label className="block text-sm font-medium mb-1 opacity-80">
+                        <label className="block text-sm font-medium mb-1" style={{ color: THEME.dark }}>
                           Add a note (optional)
                         </label>
                         <textarea
@@ -441,8 +455,9 @@ const Dashboard = () => {
                           rows="2"
                           placeholder="What's influencing your mood today?"
                           style={{ 
-                            backgroundColor: `${THEME.light}10`,
-                            borderColor: `${THEME.primary}30`
+                            backgroundColor: `${THEME.light}`,
+                            border: `1px solid ${THEME.secondary}20`,
+                            color: THEME.dark
                           }}
                         />
                       </div>
@@ -452,8 +467,9 @@ const Dashboard = () => {
                           type="submit"
                           className="flex-1 py-2 px-4 rounded-lg font-medium"
                           style={{ 
-                            backgroundColor: THEME.primary, 
-                            color: THEME.light
+                            background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.accentPrimary} 100%)`,
+                            color: 'white',
+                            boxShadow: `0 2px 10px ${THEME.primary}30`
                           }}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
@@ -465,8 +481,8 @@ const Dashboard = () => {
                           onClick={() => setShowMoodForm(false)}
                           className="py-2 px-4 rounded-lg font-medium"
                           style={{ 
-                            borderColor: `${THEME.light}30`,
-                            color: THEME.light
+                            border: `1px solid ${THEME.secondary}30`,
+                            color: THEME.dark
                           }}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
@@ -482,16 +498,16 @@ const Dashboard = () => {
 
             {/* Mood Distribution Card */}
             <motion.div 
-              className="rounded-xl p-6 border"
+              className="rounded-xl p-6"
               style={{ 
-                backgroundColor: `${THEME.secondary}80`,
-                borderColor: `${THEME.primary}20`
+                backgroundColor: THEME.light,
+                boxShadow: `0 2px 10px rgba(0,0,0,0.05)`
               }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.1 }}
             >
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ color: THEME.dark }}>
                 <Activity className="w-5 h-5" style={{ color: THEME.primary }} />
                 Mood Distribution
               </h2>
@@ -502,11 +518,11 @@ const Dashboard = () => {
                       {moodIcons[level]}
                     </div>
                     <div className="flex-1">
-                      <div className="flex justify-between text-xs mb-1">
+                      <div className="flex justify-between text-xs mb-1" style={{ color: THEME.dark }}>
                         <span>Level {level}</span>
                         <span>{dashboardData.stats.moodDistribution[level-1] || 0}%</span>
                       </div>
-                      <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: `${THEME.dark}20` }}>
+                      <div className="h-2 rounded-full overflow-hidden bg-white">
                         <div 
                           className="h-full rounded-full" 
                           style={{ 
@@ -524,25 +540,25 @@ const Dashboard = () => {
 
           {/* Middle Column - Mood Chart */}
           <motion.div 
-            className="rounded-xl p-6 border lg:col-span-2"
+            className="rounded-xl p-6 lg:col-span-2"
             style={{ 
-              backgroundColor: `${THEME.secondary}80`,
-              borderColor: `${THEME.primary}20`
+              backgroundColor: THEME.light,
+              boxShadow: `0 2px 10px rgba(0,0,0,0.05)`
             }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
           >
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
+              <h2 className="text-lg font-semibold flex items-center gap-2" style={{ color: THEME.dark }}>
                 <Calendar className="w-5 h-5" style={{ color: THEME.primary }} />
                 Mood Over Time
               </h2>
               <div className="flex items-center gap-2">
                 <div className="text-xs px-2 py-1 rounded-full flex items-center gap-1"
                   style={{ 
-                    backgroundColor: dashboardData.stats.weeklyComparison >= 0 ? `${THEME.primary}20` : '#FECDD320',
-                    color: dashboardData.stats.weeklyComparison >= 0 ? THEME.primary : '#F43F5E'
+                    backgroundColor: dashboardData.stats.weeklyComparison >= 0 ? `${THEME.accentSecondary}20` : '#FECDD320',
+                    color: dashboardData.stats.weeklyComparison >= 0 ? THEME.accentSecondary : '#F43F5E'
                   }}
                 >
                   {dashboardData.stats.weeklyComparison >= 0 ? (
@@ -568,23 +584,24 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Community Posts */}
           <motion.div 
-            className="rounded-xl p-6 border"
+            className="rounded-xl p-6"
             style={{ 
-              backgroundColor: `${THEME.secondary}80`,
-              borderColor: `${THEME.primary}20`
+              backgroundColor: THEME.light,
+              boxShadow: `0 2px 10px rgba(0,0,0,0.05)`
             }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.3 }}
           >
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
+              <h2 className="text-lg font-semibold flex items-center gap-2" style={{ color: THEME.dark }}>
                 <Users className="w-5 h-5" style={{ color: THEME.primary }} />
                 Recent Community Activity
               </h2>
               <button 
                 onClick={() => navigate("/community")}
-                className="text-xs flex items-center gap-1 opacity-70 hover:opacity-100"
+                className="text-xs flex items-center gap-1"
+                style={{ color: THEME.secondary }}
               >
                 View All <ChevronRight className="w-3 h-3" />
               </button>
@@ -601,29 +618,29 @@ const Dashboard = () => {
                   >
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-8 h-8 rounded-full flex items-center justify-center" 
-                        style={{ backgroundColor: `${THEME.accent}20` }}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke={THEME.accent}>
+                        style={{ backgroundColor: `${THEME.accentPrimary}20` }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke={THEME.accentPrimary}>
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                       </div>
-                      <span className="font-medium text-sm">
+                      <span className="font-medium text-sm" style={{ color: THEME.dark }}>
                         {post.author?.name || "Anonymous"}
                       </span>
-                      <span className="text-xs opacity-60">
+                      <span className="text-xs" style={{ color: THEME.secondary }}>
                         {new Date(post.createdAt).toLocaleDateString()}
                       </span>
                     </div>
-                    <p className="text-sm line-clamp-2 opacity-90">
+                    <p className="text-sm line-clamp-2" style={{ color: THEME.dark }}>
                       {post.content}
                     </p>
                     <div className="flex items-center gap-3 mt-3">
-                      <div className="flex items-center gap-1 text-xs opacity-60">
+                      <div className="flex items-center gap-1 text-xs" style={{ color: THEME.secondary }}>
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
                         </svg>
                         {post.likes || 0}
                       </div>
-                      <div className="flex items-center gap-1 text-xs opacity-60">
+                      <div className="flex items-center gap-1 text-xs" style={{ color: THEME.secondary }}>
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                         </svg>
@@ -635,7 +652,7 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="text-center py-6">
-                <p className="opacity-70">No recent posts yet</p>
+                <p style={{ color: THEME.secondary }}>No recent posts yet</p>
                 <button 
                   onClick={() => navigate("/community/new")}
                   className="mt-2 text-sm font-medium"
@@ -651,23 +668,24 @@ const Dashboard = () => {
           <div className="space-y-6">
             {/* AI Tip Card */}
             <motion.div 
-              className="rounded-xl p-6 border"
+              className="rounded-xl p-6"
               style={{ 
-                backgroundColor: `${THEME.secondary}80`,
-                borderColor: `${THEME.primary}20`
+                backgroundColor: THEME.light,
+                boxShadow: `0 2px 10px rgba(0,0,0,0.05)`
               }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.3 }}
             >
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
+                <h2 className="text-lg font-semibold flex items-center gap-2" style={{ color: THEME.dark }}>
                   <Sparkles className="w-5 h-5" style={{ color: THEME.primary }} />
                   Daily Wellness Tip
                 </h2>
                 <button 
                   onClick={fetchDashboardData}
-                  className="text-xs flex items-center gap-1 opacity-70 hover:opacity-100"
+                  className="text-xs flex items-center gap-1"
+                  style={{ color: THEME.secondary }}
                 >
                   <RefreshCw className="w-3 h-3" />
                   New Tip
@@ -679,8 +697,8 @@ const Dashboard = () => {
                   borderLeft: `3px solid ${THEME.primary}`
                 }}
               >
-                <p className="italic text-sm">{dashboardData.aiTip}</p>
-                <div className="text-xs mt-2 opacity-60 flex items-center gap-1">
+                <p className="italic text-sm" style={{ color: THEME.dark }}>{dashboardData.aiTip}</p>
+                <div className="text-xs mt-2 flex items-center gap-1" style={{ color: THEME.secondary }}>
                   <span>From InnerLight AI</span>
                 </div>
               </div>
@@ -688,97 +706,99 @@ const Dashboard = () => {
 
             {/* Active Chats Card */}
             <motion.div 
-              className="rounded-xl p-6 border"
+              className="rounded-xl p-6"
               style={{ 
-                backgroundColor: `${THEME.secondary}80`,
-                borderColor: `${THEME.primary}20`
+                backgroundColor: THEME.light,
+                boxShadow: `0 2px 10px rgba(0,0,0,0.05)`
               }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.4 }}
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
+                <h2 className="text-lg font-semibold flex items-center gap-2" style={{ color: THEME.dark }}>
                   <MessageSquare className="w-5 h-5" style={{ color: THEME.primary }} />
                   Your Conversations
                 </h2>
                 <button 
                   onClick={() => navigate("/chatbot")}
-                  className="text-xs flex items-center gap-1 opacity-70 hover:opacity-100"
+                  className="text-xs flex items-center gap-1"
+                  style={{ color: THEME.secondary }}
                 >
                   View All <ChevronRight className="w-3 h-3" />
-                </button>
-              </div>
-              {dashboardData.activeChats.length > 0 ? (
-                <div className="space-y-4">
-                  {dashboardData.activeChats.map((chat, index) => (
-                    <motion.div 
-                      key={index}
-                      className="p-4 rounded-lg hover:bg-primary/5 cursor-pointer transition-colors"
-                      style={{ backgroundColor: `${THEME.primary}05` }}
-                      whileHover={{ x: 5 }}
-                      onClick={() => navigate(`/chat/${chat._id}`)}
-                    >
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center" 
-                          style={{ 
-                            backgroundColor: chat.isAI ? `${THEME.primary}20` : `${THEME.secondary}20`
-                          }}
-                        >
-                          {chat.isAI ? (
-                            <Bot className="w-5 h-5" style={{ color: THEME.primary }} />
-                          ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke={THEME.secondary}>
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                          )}
-                        </div>
-                        <span className="font-medium text-sm">
-                          {chat.isAI ? "InnerLight AI" : chat.participants?.find(p => p._id !== localStorage.getItem("userId"))?.name || "Chat"}
-                        </span>
-                        <span className="text-xs opacity-60">
-                          {new Date(chat.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
+              </button>
+            </div>
+            {dashboardData.activeChats.length > 0 ? (
+              <div className="space-y-4">
+                {dashboardData.activeChats.map((chat, index) => (
+                  <motion.div 
+                    key={index}
+                    className="p-4 rounded-lg hover:bg-primary/5 cursor-pointer transition-colors"
+                    style={{ backgroundColor: `${THEME.primary}05` }}
+                    whileHover={{ x: 5 }}
+                    onClick={() => navigate(`/chat/${chat._id}`)}
+                  >
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center" 
+                        style={{ 
+                          backgroundColor: chat.isAI ? `${THEME.primary}20` : `${THEME.secondary}20`
+                        }}
+                      >
+                        {chat.isAI ? (
+                          <Bot className="w-5 h-5" style={{ color: THEME.primary }} />
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke={THEME.secondary}>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        )}
                       </div>
-                      <p className="text-sm line-clamp-2 opacity-90">
-                        {chat.lastMessage?.content || "No messages yet"}
-                      </p>
+                      <span className="font-medium text-sm" style={{ color: THEME.dark }}>
+                        {chat.isAI ? "InnerLight AI" : chat.participants?.find(p => p._id !== localStorage.getItem("userId"))?.name || "Chat"}
+                      </span>
+                      <span className="text-xs" style={{ color: THEME.secondary }}>
+                        {new Date(chat.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <p className="text-sm line-clamp-2" style={{ color: THEME.dark }}>
+                      {chat.lastMessage?.content || "No messages yet"}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <p style={{ color: THEME.secondary }}>No active conversations</p>
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  {chatStarters.map((prompt, i) => (
+                    <motion.div 
+                      key={i}
+                      className="p-3 rounded-lg cursor-pointer"
+                      style={{ backgroundColor: `${THEME.secondary}10` }}
+                      whileHover={{ scale: 1.02 }}
+                      onClick={() => navigate('/chatbot', { state: { initialMessage: prompt } })}
+                    >
+                      <p className="text-xs" style={{ color: THEME.dark }}>{prompt}</p>
                     </motion.div>
                   ))}
                 </div>
-              ) : (
-                <div className="text-center py-6">
-                  <p className="opacity-70">No active conversations</p>
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-                    {chatStarters.map((prompt, i) => (
-                      <motion.div 
-                        key={i}
-                        className="p-3 rounded-lg cursor-pointer"
-                        style={{ backgroundColor: `${THEME.dark}20` }}
-                        whileHover={{ scale: 1.02 }}
-                        onClick={() => navigate('/chatbot', { state: { initialMessage: prompt } })}
-                      >
-                        <p className="text-xs">{prompt}</p>
-                      </motion.div>
-                    ))}
-                  </div>
-                  <button 
-                    onClick={() => navigate("/chatbot")}
-                    className="mt-4 w-full py-2 rounded-lg font-medium flex items-center justify-center gap-2"
-                    style={{ 
-                      backgroundColor: THEME.primary,
-                      color: THEME.light
-                    }}
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                    Chat with InnerLight AI
-                  </button>
-                </div>
-              )}
-            </motion.div>
-          </div>
+                <button 
+                  onClick={() => navigate("/chatbot")}
+                  className="mt-4 w-full py-2 rounded-lg font-medium flex items-center justify-center gap-2"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.accentPrimary} 100%)`,
+                    color: 'white',
+                    boxShadow: `0 2px 10px ${THEME.primary}30`
+                  }}
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Chat with InnerLight AI
+                </button>
+              </div>
+            )}
+          </motion.div>
         </div>
       </div>
+    </div>
     </div>
   );
 };
