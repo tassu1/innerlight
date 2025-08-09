@@ -26,11 +26,12 @@ import {
 import { motion } from "framer-motion";
 
 const THEME = {
-  primary: "#FF7E6B",
-  secondary: "#2F4858",
-  dark: "#2A2D34",
-  light: "#F7F4EA",
-  accent: "#FF9E90"
+  primary: "#E76F51",       // Coral for active/hover
+  secondary: "#5C4033",     // Cocoa brown background
+  dark: "#2B2B2B",          // Dark charcoal for text
+  light: "#F6F1E9",         // Cream for text/icons
+  accentPrimary: "#F4A261", // Gold for buttons
+  accentSecondary: "#E9C46A"// Light gold accents
 };
 
 const Navbar = () => {
@@ -55,25 +56,13 @@ const Navbar = () => {
     };
   }, []);
 
-
-
-useEffect(() => {
-    // Always show scrollbar to prevent layout shift
-    document.documentElement.style.overflowY = 'scroll';
-    
+  useEffect(() => {
     // Set body background to match theme
-    document.body.style.backgroundColor = THEME.dark;
-    
-    // Prevent horizontal scroll
-    document.body.style.overflowX = 'hidden';
-    
+    document.body.style.backgroundColor = THEME.secondary;
     return () => {
-      document.documentElement.style.overflowY = '';
-      document.body.style.backgroundColor = '';
-      document.body.style.overflowX = '';
+      document.body.style.backgroundColor = "";
     };
   }, []);
-
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -141,7 +130,7 @@ useEffect(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("userEmail");
     setIsAuthenticated(false);
-    setShowProfile(false); // Close profile on logout
+    setShowProfile(false);
     navigate("/");
     setMobileMenuOpen(false);
   };
@@ -158,138 +147,139 @@ useEffect(() => {
   };
 
   if (!isAuthenticated) {
-  return (
-    <>
-      <nav 
-        className="fixed w-full z-50 px-4 sm:px-6 py-3 backdrop-blur-sm bg-opacity-90"
-        style={{
-          backgroundColor: `${THEME.dark}EE`,
-          borderBottom: `1px solid ${THEME.primary}30`
-        }}
-      >
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          {/* Left side - Logo */}
-          <motion.div 
-            className="flex items-center gap-2 cursor-pointer group"
-            onClick={() => navigate("/")}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-             <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              transition={{ 
-                duration: 0.5,
-                repeat: 1,
-                repeatType: "mirror"
-              }}
-              className="p-3 rounded-full mb-3"
-              style={{ 
-                backgroundColor: `${THEME.primary}20`,
-                boxShadow: `0 0 0 4px ${THEME.primary}10`
-              }}
+    return (
+      <>
+        <nav 
+          className="fixed w-full z-50 px-4 sm:px-6 py-3"
+          style={{
+            backgroundColor: THEME.secondary,
+            borderBottom: `1px solid ${THEME.primary}30`
+          }}
+        >
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            {/* Left side - Logo */}
+            <motion.div 
+              className="flex items-center gap-2 cursor-pointer group"
+              onClick={() => navigate("/")}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <LampDesk size={19} style={{ color: THEME.primary }} />
-            </motion.div>
-            <span 
-              className="text-xl font-bold"
-              style={{ color: THEME.light }}
-            >
-              InnerLight
-            </span>
-          </motion.div>
-
-          {/* Right side - Auth buttons */}
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center gap-4">
-              <motion.button
-                onClick={() => navigate("/login")}
-                className="px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-theme-primary/10 transition-colors"
+              <motion.div
+                className="p-2 rounded-full"
+                style={{ 
+                  backgroundColor: `${THEME.primary}20`,
+                }}
+              >
+                <LampDesk size={20} style={{ color: THEME.primary }} />
+              </motion.div>
+              <span 
+                className="text-xl font-bold"
                 style={{ color: THEME.light }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              >
+                InnerLight
+              </span>
+            </motion.div>
+
+            {/* Right side - Auth buttons */}
+            <div className="flex items-center gap-4">
+              <div className="hidden sm:flex items-center gap-4">
+                <motion.button
+                  onClick={() => navigate("/login")}
+                  className="px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-theme-primary/10 transition-colors"
+                  style={{ color: THEME.light }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span className="text-sm">Login</span>
+                </motion.button>
+                <motion.button
+                  onClick={() => navigate("/signup")}
+                  className="px-4 py-2 rounded-lg flex items-center gap-2 transition-all"
+                  style={{
+                    backgroundColor: THEME.accentPrimary,
+                    color: THEME.light
+                  }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    backgroundColor: THEME.accentSecondary
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span className="text-sm">Sign Up</span>
+                </motion.button>
+              </div>
+
+              <button 
+                className="sm:hidden p-2 rounded-lg hover:bg-theme-primary/10 transition-colors mobile-menu-button"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                style={{ color: THEME.light }}
+              >
+                {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            </div>
+          </div>
+        </nav>
+
+        {mobileMenuOpen && (
+          <motion.div 
+            className="fixed top-14 left-0 right-0 z-40 sm:hidden py-2 px-4 shadow-lg"
+            style={{ 
+              backgroundColor: THEME.secondary,
+              borderTop: `1px solid ${THEME.primary}20`
+            }}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+            ref={mobileMenuRef}
+          >
+            <div className="flex flex-col gap-2">
+              <motion.button
+                onClick={() => {
+                  navigate("/login");
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-theme-primary/10 transition-colors"
+                style={{ color: THEME.light }}
+                whileHover={{ x: 5 }}
               >
                 <LogIn className="w-4 h-4" />
-                <span className="text-sm">Login</span>
+                <span>Login</span>
               </motion.button>
               <motion.button
-                onClick={() => navigate("/signup")}
-                className="px-4 py-2 rounded-lg flex items-center gap-2 transition-all"
+                onClick={() => {
+                  navigate("/signup");
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full px-4 py-2 rounded-lg flex items-center gap-2 transition-all"
                 style={{
-                  backgroundColor: THEME.primary,
+                  backgroundColor: THEME.accentPrimary,
                   color: THEME.light
                 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ 
+                  x: 5,
+                  backgroundColor: THEME.accentSecondary
+                }}
               >
                 <UserPlus className="w-4 h-4" />
-                <span className="text-sm">Sign Up</span>
+                <span>Sign Up</span>
               </motion.button>
             </div>
-
-            <button 
-              className="sm:hidden p-2 rounded-lg hover:bg-theme-primary/10 transition-colors mobile-menu-button"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              style={{ color: THEME.light }}
-            >
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {mobileMenuOpen && (
-        <motion.div 
-          className="fixed top-14 left-0 right-0 z-40 sm:hidden bg-theme-dark py-2 px-4 shadow-lg"
-          style={{ backgroundColor: THEME.dark }}
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.2 }}
-          ref={mobileMenuRef}
-        >
-          <div className="flex flex-col gap-2">
-            <motion.button
-              onClick={() => {
-                navigate("/login");
-                setMobileMenuOpen(false);
-              }}
-              className="w-full px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-theme-primary/10 transition-colors"
-              style={{ color: THEME.light }}
-              whileHover={{ x: 5 }}
-            >
-              <LogIn className="w-4 h-4" />
-              <span>Login</span>
-            </motion.button>
-            <motion.button
-              onClick={() => {
-                navigate("/signup");
-                setMobileMenuOpen(false);
-              }}
-              className="w-full px-4 py-2 rounded-lg flex items-center gap-2 transition-all"
-              style={{
-                backgroundColor: THEME.primary,
-                color: THEME.light
-              }}
-              whileHover={{ x: 5 }}
-            >
-              <UserPlus className="w-4 h-4" />
-              <span>Sign Up</span>
-            </motion.button>
-          </div>
-        </motion.div>
-      )}
-      <div className="h-2"></div>
-    </>
-  );
-}
+          </motion.div>
+        )}
+        <div className=" w-full"></div>
+      </>
+    );
+  }
 
   return (
     <>
       <nav 
-        className="fixed w-full z-50 px-4 sm:px-6 py-3 backdrop-blur-sm bg-opacity-90"
+        className="fixed w-full z-50 px-4 sm:px-6 py-3"
         style={{
-          backgroundColor: `${THEME.dark}EE`,
+          backgroundColor: THEME.secondary,
           borderBottom: `1px solid ${THEME.primary}30`
         }}
       >
@@ -309,22 +299,14 @@ useEffect(() => {
               onClick={() => navigate("/dashboard")}
               whileHover={{ scale: 1.05 }}
             >
-               <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              transition={{ 
-                duration: 0.5,
-                repeat: 1,
-                repeatType: "mirror"
-              }}
-              className="p-3 rounded-full mb-3"
-              style={{ 
-                backgroundColor: `${THEME.primary}20`,
-                boxShadow: `0 0 0 4px ${THEME.primary}10`
-              }}
-            >
-              <LampDesk size={18} style={{ color: THEME.primary }} />
-            </motion.div>
+              <motion.div
+                className="p-2 rounded-full"
+                style={{ 
+                  backgroundColor: `${THEME.primary}20`,
+                }}
+              >
+                <LampDesk size={18} style={{ color: THEME.primary }} />
+              </motion.div>
               <span 
                 className="text-xl font-bold hidden sm:block"
                 style={{ color: THEME.light }}
@@ -338,57 +320,77 @@ useEffect(() => {
           <div className="hidden sm:flex items-center gap-2 mx-4">
             <motion.button
               onClick={() => navigate("/dashboard")}
-              className="px-3 py-2 rounded-lg flex items-center gap-2 hover:bg-theme-primary/10 transition-colors"
+              className={`px-3 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                location.pathname === "/dashboard" ? 
+                `bg-${THEME.light}20 text-${THEME.light}` : 
+                `hover:bg-${THEME.primary}10 text-${THEME.light}`
+              }`}
               style={{ color: THEME.light }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               
-              <span className="text-sm">Home</span>
+              <span className="text-md">Home</span>
             </motion.button>
 
             <motion.button
               onClick={() => navigate("/chatbot")}
-              className="px-3 py-2 rounded-lg flex items-center gap-2 hover:bg-theme-primary/10 transition-colors"
+              className={`px-3 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                location.pathname === "/chatbot" ? 
+                `bg-${THEME.primary}20 text-${THEME.primary}` : 
+                `hover:bg-${THEME.primary}10 text-${THEME.light}`
+              }`}
               style={{ color: THEME.light }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-             
-              <span className="text-sm">Chatbot</span>
+              
+              <span className="text-md">Chatbot</span>
             </motion.button>
 
             <motion.button
               onClick={() => navigate("/community")}
-              className="px-3 py-2 rounded-lg flex items-center gap-2 hover:bg-theme-primary/10 transition-colors"
+              className={`px-3 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                location.pathname === "/community" ? 
+                `bg-${THEME.primary}20 text-${THEME.primary}` : 
+                `hover:bg-${THEME.primary}10 text-${THEME.light}`
+              }`}
               style={{ color: THEME.light }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               
-              <span className="text-sm">Community</span>
+              <span className="text-md">Community</span>
             </motion.button>
 
             <motion.button
               onClick={() => navigate("/resources")}
-              className="px-3 py-2 rounded-lg flex items-center gap-2 hover:bg-theme-primary/10 transition-colors"
+              className={`px-3 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                location.pathname === "/resources" ? 
+                `bg-${THEME.primary}20 text-${THEME.primary}` : 
+                `hover:bg-${THEME.primary}10 text-${THEME.light}`
+              }`}
               style={{ color: THEME.light }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               
-              <span className="text-sm">Resources</span>
+              <span className="text-md">Resources</span>
             </motion.button>
 
             <motion.button
               onClick={() => navigate("/journal")}
-              className="px-3 py-2 rounded-lg flex items-center gap-2 hover:bg-theme-primary/10 transition-colors"
+              className={`px-3 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                location.pathname === "/journal" ? 
+                `bg-${THEME.primary}20 text-${THEME.primary}` : 
+                `hover:bg-${THEME.primary}10 text-${THEME.light}`
+              }`}
               style={{ color: THEME.light }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               
-              <span className="text-sm">Journaling</span>
+              <span className="text-md">Journal</span>
             </motion.button>
           </div>
 
@@ -472,7 +474,7 @@ useEffect(() => {
                             {notif.type === 'like' ? (
                               <ThumbsUp size={16} style={{ color: THEME.primary }} />
                             ) : (
-                              <MessageSquareText size={16} style={{ color: THEME.accent }} />
+                              <MessageSquareText size={16} style={{ color: THEME.accentPrimary }} />
                             )}
                           </div>
                           <div className="flex-1">
@@ -604,8 +606,11 @@ useEffect(() => {
 
       {mobileMenuOpen && (
         <motion.div 
-          className="fixed top-14 left-0 right-0 z-40 sm:hidden bg-theme-dark/95 py-4 px-4 shadow-lg backdrop-blur-sm"
-          style={{ backgroundColor: `${THEME.dark}EE` }}
+          className="fixed top-14 left-0 right-0 z-40 sm:hidden py-4 px-4 shadow-lg"
+          style={{ 
+            backgroundColor: THEME.secondary,
+            borderTop: `1px solid ${THEME.primary}20`
+          }}
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
@@ -667,7 +672,7 @@ useEffect(() => {
 
             <motion.button
               onClick={() => {
-                navigate("/journaling");
+                navigate("/journal");
                 setMobileMenuOpen(false);
               }}
               className="w-full px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-theme-primary/10 transition-colors"
@@ -675,7 +680,7 @@ useEffect(() => {
               whileHover={{ x: 5 }}
             >
               <BookOpen size={20} />
-              <span>Journaling</span>
+              <span>Journal</span>
             </motion.button>
 
             <motion.button
@@ -712,11 +717,9 @@ useEffect(() => {
           </div>
         </motion.div>
       )}
-      <div className="h-2 w-full" style={{ backgroundColor: THEME.dark }}></div>
+      <div className="h-3 "></div>
     </>
   );
 };
 
 export default Navbar;
-
-
