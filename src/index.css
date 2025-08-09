@@ -1,29 +1,43 @@
 @import "tailwindcss";
 
+/* ================================
+   InnerLight Theme Variables
+   ================================ */
+:root {
+  --color-primary: #E76F51;   /* Coral */
+  --color-secondary: #5C4033; /* Cocoa brown */
+  --color-dark: #2B2B2B;      /* Charcoal */
+  --color-light: #F6F1E9;     /* Cream */
+  --color-accent: #F4A261;    /* Sunset orange */
+}
 
-/* Force scrollbar and prevent white gaps */
+/* Base page colors */
 html {
   overflow-y: scroll;
-  background-color: #2A2D34; /* Your THEME.dark color */
+  background-color: var(--color-dark);
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: #2A2D34; /* Match navbar color */
+  background-color: var(--color-dark);
+  color: var(--color-light);
   overflow-x: hidden;
 }
 
-
-/* Style the scrollbar to match your theme */
+/* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
-  background-color: #2A2D34;
+  background-color: var(--color-dark);
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #FF7E6B; /* Your THEME.primary */
+  background-color: var(--color-primary);
   border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-accent);
 }
 
 html, body, #root {
