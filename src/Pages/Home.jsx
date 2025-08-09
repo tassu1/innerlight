@@ -4,11 +4,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const THEME = {
-  primary: "#FF7E6B",
-  secondary: "#2F4858",
-  dark: "#2A2D34",
-  light: "#F7F4EA",
-  accent: "#FF9E90"
+  primary: "#E76F51",       // Vibrant coral
+  secondary: "#F4A261",     // Sunset orange
+  dark: "#2B2B2B",          // Deep charcoal
+  light: "#F6F1E9",         // Soft cream
+  accentPrimary: "#E9C46A", // Muted gold
+  accentSecondary: "#2A9D8F"// Teal accent
 };
 
 export default function Home() {
@@ -23,7 +24,6 @@ export default function Home() {
     handleResize();
     window.addEventListener('resize', handleResize);
     
-    // Show chat after left panel appears on mobile
     const timer = setTimeout(() => setShowChat(true), isMobile ? 1000 : 0);
     return () => {
       window.removeEventListener('resize', handleResize);
@@ -31,7 +31,8 @@ export default function Home() {
     };
   }, [isMobile]);
 
-  const chatMessages = [
+
+   const chatMessages = [
     {
       speaker: "AI",
       message: "Welcome back! I noticed you journaled about work stress yesterday. Would you like to explore that further?",
@@ -214,15 +215,51 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: THEME.dark, color: THEME.light }}>
-      {/* 🌟 Hero Section - Mobile Optimized */}
+    <div className="min-h-screen" style={{ backgroundColor: THEME.light, color: THEME.dark }}>
+      {/* 🌅 Coral + Sunset Gradient Hero Section */}
       <section className="relative min-h-[90vh] flex items-center overflow-hidden px-4 sm:px-6 lg:px-8">
-        <div className="absolute inset-0 opacity-20"
-          style={{ background: `radial-gradient(circle at 20% 30%, ${THEME.primary}40, transparent 50%)` }}
+        {/* Gradient Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#E76F51] via-[#F4A261] to-[#E9C46A] opacity-90" />
+        
+        {/* Subtle Noise Texture */}
+        <div 
+          className="absolute inset-0 opacity-10"
+          style={{ 
+            backgroundImage: "url('https://grainy-gradients.vercel.app/noise.svg')",
+            backgroundSize: "200px 200px"
+          }}
         />
+        
+        {/* Floating Bubbles */}
+        <div className="absolute inset-0 overflow-hidden">
+          {[...Array(10)].map((_, i) => (
+            <motion.div
+              key={i}
+              animate={{
+                y: [0, -20, 0],
+                x: [0, Math.random() * 40 - 20, 0],
+                opacity: [0.6, 1, 0.6]
+              }}
+              transition={{
+                duration: 5 + Math.random() * 10,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="absolute rounded-full"
+              style={{
+                width: `${Math.random() * 10 + 5}px`,
+                height: `${Math.random() * 10 + 5}px`,
+                backgroundColor: THEME.light,
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                opacity: 0.7
+              }}
+            />
+          ))}
+        </div>
 
         <div className="max-w-7xl mx-auto py-12 md:py-24 flex flex-col lg:grid lg:grid-cols-2 gap-8 md:gap-16 items-center z-10 w-full">
-          {/* Left Panel - Appears first on mobile */}
+          {/* Left Panel */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -232,77 +269,93 @@ export default function Home() {
             <motion.div
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
               style={{
-                background: `${THEME.primary}10`,
-                border: `1px solid ${THEME.primary}30`
+                background: `${THEME.light}20`,
+                border: `1px solid ${THEME.light}30`,
+                color: THEME.light
               }}
             >
-              <Zap className="w-4 h-4" style={{ color: THEME.primary }} />
-              <span className="text-sm font-medium" style={{ color: THEME.primary }}>
+              <Zap className="w-4 h-4" style={{ color: THEME.accentPrimary }} />
+              <span className="text-sm font-medium">
                 Now with group therapy
               </span>
             </motion.div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-light leading-tight mb-6">
-              <span className="block font-medium mb-3" style={{ color: THEME.primary }}>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-light leading-tight mb-6 text-white">
+              <span className="block font-medium mb-3">
                 You deserve support
               </span>
               <span className="block font-medium">that evolves with you</span>
             </h1>
 
-            <p className="text-lg md:text-xl mb-8 max-w-xl opacity-80">
-              InnerLight combines <span style={{ color: THEME.primary }}>AI-powered therapy</span> with <span className="underline" style={{ textDecorationColor: THEME.primary }}>authentic human connection</span>.
+            <p className="text-lg md:text-xl mb-8 max-w-xl opacity-90 text-white">
+              InnerLight combines <span className="font-medium" style={{ color: THEME.accentPrimary }}>AI-powered therapy</span> with <span className="underline" style={{ textDecorationColor: THEME.accentPrimary }}>authentic human connection</span>.
             </p>
 
             <div className="flex flex-wrap gap-4 mb-8 md:mb-12">
-              <button
+              <motion.button
+                whileHover={{ 
+                  y: -4,
+                  backgroundColor: THEME.accentPrimary,
+                  boxShadow: `0 8px 20px ${THEME.accentPrimary}80`
+                }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => navigate("/signup")}
                 className="px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-all text-sm sm:text-base"
                 style={{
-                  background: THEME.primary,
-                  color: THEME.light
+                  background: THEME.light,
+                  color: THEME.primary,
+                  boxShadow: `0 4px 14px ${THEME.light}40`
                 }}
               >
                 <BookHeart className="w-5 h-5" />
                 Start Free Trial
-              </button>
-              <button
+              </motion.button>
+              <motion.button
+                whileHover={{ 
+                  y: -4,
+                  backgroundColor: `${THEME.light}20`,
+                  borderColor: THEME.accentPrimary
+                }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => navigate("/login")}
                 className="px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-all border text-sm sm:text-base"
                 style={{
-                  borderColor: `${THEME.light}30`,
+                  borderColor: `${THEME.light}60`,
                   color: THEME.light
                 }}
               >
                 Sign In
-              </button>
+              </motion.button>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs sm:text-sm">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs sm:text-sm text-white opacity-80">
               <div className="flex items-center gap-3">
                 <div className="flex -space-x-2">
                   {["👩", "🧔", "👩🏾", "🧑🏽"].map((emoji, i) => (
-                    <div 
+                    <motion.div 
                       key={i} 
+                      whileHover={{ y: -5 }}
                       className="w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center border"
                       style={{
-                        backgroundColor: THEME.secondary,
-                        borderColor: `${THEME.light}10`
+                        backgroundColor: THEME.light,
+                        borderColor: `${THEME.light}30`,
+                        color: THEME.dark
                       }}
                     >
                       {emoji}
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
                 <span>1k+ active healers</span>
               </div>
               <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4" style={{ color: THEME.primary }} />
+                <Shield className="w-4 h-4" style={{ color: THEME.accentPrimary }} />
                 <span>HIPAA compliant</span>
               </div>
             </div>
           </motion.div>
 
-          {/* Right Panel - Chat Messages - Appears after left panel on mobile */}
+          {/* Right Panel - Chat Messages */}
           {showChat && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
@@ -313,27 +366,35 @@ export default function Home() {
               <div 
                 className="absolute inset-0 rounded-xl lg:rounded-3xl backdrop-blur-sm border"
                 style={{
-                  background: `${THEME.primary}05`,
-                  borderColor: `${THEME.primary}20`
+                  background: `${THEME.light}10`,
+                  borderColor: `${THEME.light}30`
                 }}
               />
               <div className="relative p-4 sm:p-6">
-                <div 
+                <motion.div 
+                  whileHover={{ 
+                    y: -5,
+                    boxShadow: `0 10px 25px ${THEME.accentPrimary}30`
+                  }}
                   className="rounded-xl overflow-hidden shadow-xl"
-                  style={{ backgroundColor: THEME.secondary }}
+                  style={{ backgroundColor: THEME.light }}
                 >
                   <div 
                     className="p-3 sm:p-4 border-b flex items-center gap-2"
-                    style={{ borderColor: `${THEME.primary}10` }}
+                    style={{ 
+                      borderColor: `${THEME.primary}10`,
+                      backgroundColor: THEME.primary,
+                      color: THEME.light
+                    }}
                   >
-                    <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full" style={{ backgroundColor: THEME.primary }} />
-                    <span className="text-xs ml-2" style={{ color: `${THEME.light}60` }}>
+                    <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full" style={{ backgroundColor: THEME.accentPrimary }} />
+                    <span className="text-xs ml-2">
                       InnerLight AI
                     </span>
                   </div>
                   <div 
                     className="p-3 sm:p-4 space-y-3 sm:space-y-4 h-64 sm:h-80 md:h-96 overflow-y-auto"
-                    style={{ backgroundColor: THEME.secondary }}
+                    style={{ backgroundColor: THEME.light }}
                   >
                     {chatMessages.map((msg, i) => (
                       <motion.div
@@ -363,8 +424,8 @@ export default function Home() {
                           style={{
                             backgroundColor: msg.speaker === "AI" 
                               ? `${THEME.primary}10` 
-                              : `${THEME.light}10`,
-                            color: THEME.light
+                              : `${THEME.secondary}10`,
+                            color: THEME.dark
                           }}
                         >
                           <p>{msg.message}</p>
@@ -372,11 +433,11 @@ export default function Home() {
                             <div 
                               className="mt-2 rounded p-2 text-xs sm:text-sm"
                               style={{
-                                backgroundColor: `${THEME.primary}20`,
-                                borderLeft: `3px solid ${THEME.primary}`
+                                backgroundColor: `${THEME.accentPrimary}10`,
+                                borderLeft: `3px solid ${THEME.accentPrimary}`
                               }}
                             >
-                              <p className="font-medium" style={{ color: THEME.primary }}>
+                              <p className="font-medium" style={{ color: THEME.accentPrimary }}>
                                 {msg.exercise.title}
                               </p>
                               <p>{msg.exercise.steps}</p>
@@ -386,14 +447,14 @@ export default function Home() {
                       </motion.div>
                     ))}
                   </div>
-                </div>
+                </motion.div>
               </div>
             </motion.div>
           )}
         </div>
       </section>
 
-      {/* ✨ All Features Section */}
+        {/* ✨ All Features Section */}
       <section className="py-12 sm:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-center mb-12 sm:mb-16">
           <motion.h2
@@ -421,10 +482,11 @@ export default function Home() {
               viewport={{ once: true, margin: "-50px" }}
               transition={{ delay: i * 0.1 }}
               whileHover={{ y: -5 }}
-              className="rounded-xl p-4 sm:p-6 border transition-all"
+              className="rounded-xl p-4 sm:p-6 border transition-all hover:shadow-lg"
               style={{
-                backgroundColor: `${THEME.secondary}80`,
-                borderColor: `${THEME.primary}20`
+                backgroundColor: THEME.light,
+                borderColor: `${THEME.primary}20`,
+                boxShadow: `0 4px 6px ${THEME.secondary}10`
               }}
             >
               <div 
@@ -457,7 +519,7 @@ export default function Home() {
       {/* 💬 More AI Chat Examples */}
       <section 
         className="py-12 sm:py-20 px-4 sm:px-6 lg:px-8"
-        style={{ backgroundColor: THEME.secondary }}
+        style={{ backgroundColor: THEME.secondary, color: THEME.light }}
       >
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -467,10 +529,10 @@ export default function Home() {
           >
             <MessageSquare 
               className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-3 sm:mb-4" 
-              style={{ color: THEME.primary }} 
+              style={{ color: THEME.accentSecondary }} 
             />
             <h2 className="text-2xl sm:text-3xl font-light mb-2 sm:mb-3">
-              <span style={{ color: THEME.primary }}>AI Companion</span> Examples
+              <span style={{ color: THEME.accentSecondary }}>AI Companion</span> Examples
             </h2>
             <p className="opacity-80 text-sm sm:text-base">
               See how our therapeutic AI responds in different situations
@@ -485,10 +547,12 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.2 }}
-                className="rounded-xl p-4 sm:p-6 border"
+                className="rounded-xl p-4 sm:p-6 border hover:shadow-lg"
                 style={{
-                  backgroundColor: THEME.dark,
-                  borderColor: `${THEME.primary}20`
+                  backgroundColor: THEME.light,
+                  borderColor: `${THEME.primary}20`,
+                  color: THEME.dark,
+                  boxShadow: `0 4px 6px ${THEME.secondary}20`
                 }}
               >
                 <h3 className="text-base sm:text-lg font-medium mb-3 sm:mb-4" style={{ color: THEME.primary }}>
@@ -516,8 +580,8 @@ export default function Home() {
                         style={{
                           backgroundColor: msg.speaker === "AI" 
                             ? `${THEME.primary}10` 
-                            : `${THEME.light}10`,
-                          color: THEME.light
+                            : `${THEME.secondary}10`,
+                          color: THEME.dark
                         }}
                       >
                         <p>{msg.message}</p>
@@ -525,7 +589,7 @@ export default function Home() {
                           <div 
                             className="mt-2 rounded p-2 text-xs sm:text-sm"
                             style={{
-                              backgroundColor: `${THEME.primary}20`,
+                              backgroundColor: `${THEME.primary}10`,
                               borderLeft: `3px solid ${THEME.primary}`
                             }}
                           >
@@ -565,10 +629,11 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="rounded-xl p-4 sm:p-6 border"
+              className="rounded-xl p-4 sm:p-6 border hover:shadow-lg"
               style={{
-                backgroundColor: `${THEME.secondary}80`,
-                borderColor: `${THEME.primary}20`
+                backgroundColor: THEME.light,
+                borderColor: `${THEME.primary}20`,
+                boxShadow: `0 4px 6px ${THEME.secondary}10`
               }}
             >
               <div 
@@ -587,17 +652,15 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Final CTA */}
+
+      {/* Final CTA with Gold Hover Effects */}
       <section 
         className="py-12 sm:py-20 px-4 sm:px-6 text-center relative overflow-hidden"
-        style={{ backgroundColor: THEME.dark }}
+        style={{ 
+          background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.secondary} 100%)`,
+          color: THEME.light 
+        }}
       >
-        <div 
-          className="absolute inset-0 opacity-10"
-          style={{ 
-            background: `url('https://grainy-gradients.vercel.app/noise.svg')`
-          }}
-        />
         <div className="max-w-3xl mx-auto relative">
           <motion.div
             animate={{
@@ -612,23 +675,29 @@ export default function Home() {
           >
             <Sparkles 
               className="w-8 h-8 sm:w-10 sm:h-10 mx-auto" 
-              style={{ color: THEME.primary }} 
+              style={{ color: THEME.accentPrimary }} 
             />
           </motion.div>
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-light mb-4 sm:mb-6">
-            Ready to <span style={{ color: THEME.primary }}>begin healing</span>?
+            Ready to <span style={{ color: THEME.accentPrimary }}>begin healing</span>?
           </h2>
           <p className="text-sm sm:text-base md:text-lg opacity-80 mb-6 sm:mb-8 max-w-2xl mx-auto">
             Join thousands finding support through compassionate technology.
           </p>
           <motion.button
-            whileHover={{ y: -4, scale: 1.02 }}
+            whileHover={{ 
+              y: -8,
+              scale: 1.05,
+              backgroundColor: THEME.accentPrimary,
+              boxShadow: `0 10px 25px ${THEME.accentPrimary}80`
+            }}
             whileTap={{ scale: 0.98 }}
             onClick={() => navigate("/signup")}
             className="px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-medium flex items-center gap-2 mx-auto transition-all text-sm sm:text-base"
             style={{
-              backgroundColor: THEME.primary,
-              color: THEME.light
+              backgroundColor: THEME.light,
+              color: THEME.primary,
+              boxShadow: `0 4px 14px ${THEME.light}40`
             }}
           >
             <BookHeart className="w-4 h-4 sm:w-5 sm:h-5" />
