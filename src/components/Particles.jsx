@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 
-const Particles = () => {
-  const particles = Array(20).fill(0);
+const Particles = ({ colors = ["#E76F51", "#F4A261"], count = 20 }) => {
+  const particles = Array(count).fill(0);
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -12,7 +12,8 @@ const Particles = () => {
         const delay = Math.random() * 5;
         const x = Math.random() * 100;
         const y = Math.random() * 100;
-        
+        const color = colors[Math.floor(Math.random() * colors.length)];
+
         return (
           <motion.div
             key={i}
@@ -20,7 +21,7 @@ const Particles = () => {
             style={{
               width: `${size}px`,
               height: `${size}px`,
-              backgroundColor: '#FF7E6B',
+              backgroundColor: color,
               opacity: Math.random() * 0.4 + 0.1,
               left: `${x}%`,
               top: `${y}%`,
