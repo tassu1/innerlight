@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, User, Mail, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-
-// Warm, no-blue theme
 const THEME = {
-  primary: "#E76F51",   // Warm coral
-  secondary: "#5C4033", // Cocoa brown
-  dark: "#2B2B2B",      // Charcoal
-  light: "#FAF5E9",     // Cream
-  accent: "#F4A261"     // Sunset orange
+  primary: "#6D28D9",       // Deep purple
+  secondary: "#1E1B4B",     // Dark indigo
+  dark: "#0F172A",          // Very dark blue (almost black)
+  light: "#E2E8F0",         // Soft light text
+  accentPrimary: "#7C3AED",  // Vibrant purple
+  accentSecondary: "#4C1D95", // Deep purple
+  textPrimary: "#F8FAFC",    // Pure white text
+  textSecondary: "#94A3B8",  // Light gray-blue text
+  cardBg: "rgba(30, 27, 75, 0.7)", // Semi-transparent dark indigo
+  border: "rgba(124, 58, 237, 0.3)" // Purple border with transparency
 };
 
 function Signup() {
@@ -55,49 +58,50 @@ function Signup() {
   return (
     <div
       className="min-h-screen relative overflow-hidden flex items-center justify-center p-4"
-      style={{ backgroundColor: THEME.light }}
+      style={{ backgroundColor: THEME.dark }}
     >
-      
-      
-
-      {/* Warm Gradient Overlay */}
+      {/* Background gradient elements */}
       <div
-        className="absolute inset-0 opacity-25"
+        className="absolute inset-0 opacity-20"
         style={{
           background: `
-            radial-gradient(circle at 75% 30%, ${THEME.primary}40, transparent 50%),
-            radial-gradient(circle at 25% 70%, ${THEME.accent}40, transparent 50%)
-          `,
+            radial-gradient(circle at 75% 30%, ${THEME.accentPrimary}40, transparent 50%),
+            radial-gradient(circle at 25% 70%, ${THEME.primary}40, transparent 50%)`
         }}
-      ></div>
+      />
 
-      {/* Glass Card */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="w-full max-w-md z-10"
       >
         <div
-          className="p-8 rounded-3xl backdrop-blur-lg border shadow-2xl"
+          className="p-8 rounded-2xl backdrop-blur-sm border"
           style={{
-            backgroundColor: 'rgba(44, 0, 0, 0.7)',
-            borderColor: `${THEME.primary}30`,
-            boxShadow: `0 8px 32px ${THEME.primary}30`
+            backgroundColor: THEME.cardBg,
+            borderColor: THEME.border,
+            boxShadow: `0 8px 32px ${THEME.primary}20`
           }}
         >
           {/* Header */}
           <div className="flex flex-col items-center mb-8">
-            <div
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.5 }}
               className="p-3 rounded-full mb-3"
-              style={{ backgroundColor: `${THEME.primary}20` }}
+              style={{
+                backgroundColor: `${THEME.primary}20`,
+                boxShadow: `0 0 0 4px ${THEME.primary}10`
+              }}
             >
-              <UserPlus size={28} style={{ color: THEME.primary }} />
-            </div>
-            <h1 className="text-2xl font-bold text-center" style={{ color: THEME.light }}>
+              <UserPlus size={28} style={{ color: THEME.accentPrimary }} />
+            </motion.div>
+            <h1 className="text-2xl font-bold text-center" style={{ color: THEME.textPrimary }}>
               Create Your Account
             </h1>
-            <p className="text-sm mt-2 text-center" style={{ color: THEME.accent }}>
+            <p className="text-sm mt-2 text-center" style={{ color: THEME.textSecondary }}>
               Join our wellness community
             </p>
           </div>
@@ -108,7 +112,7 @@ function Signup() {
               className="mb-4 p-3 rounded-lg text-sm flex items-center gap-2"
               style={{
                 backgroundColor: `${THEME.primary}20`,
-                color: THEME.light,
+                color: THEME.textPrimary,
                 border: `1px solid ${THEME.primary}50`
               }}
             >
@@ -121,101 +125,119 @@ function Signup() {
           <form onSubmit={handleSignup} className="space-y-4">
             {/* Name */}
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: THEME.light }}>
+              <label className="block text-sm font-medium mb-2" style={{ color: THEME.textPrimary }}>
                 Full Name
               </label>
-              <input
-                type="text"
-                placeholder="Your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all"
-                style={{
-                  backgroundColor: 'rgba(250, 245, 233, 0.08)',
-                  border: '1px solid rgba(250, 245, 233, 0.2)',
-                  color: THEME.light
-                }}
-                required
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                  <User size={18} style={{ color: THEME.textSecondary }} />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Your name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all"
+                  style={{
+                    backgroundColor: `${THEME.secondary}80`,
+                    border: `1px solid ${THEME.border}`,
+                    color: THEME.textPrimary
+                  }}
+                  required
+                />
+              </div>
             </div>
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: THEME.light }}>
+              <label className="block text-sm font-medium mb-2" style={{ color: THEME.textPrimary }}>
                 Email Address
               </label>
-              <input
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all"
-                style={{
-                  backgroundColor: 'rgba(250, 245, 233, 0.08)',
-                  border: '1px solid rgba(250, 245, 233, 0.2)',
-                  color: THEME.light
-                }}
-                required
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                  <Mail size={18} style={{ color: THEME.textSecondary }} />
+                </div>
+                <input
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all"
+                  style={{
+                    backgroundColor: `${THEME.secondary}80`,
+                    border: `1px solid ${THEME.border}`,
+                    color: THEME.textPrimary
+                  }}
+                  required
+                />
+              </div>
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: THEME.light }}>
+              <label className="block text-sm font-medium mb-2" style={{ color: THEME.textPrimary }}>
                 Password
               </label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all"
-                style={{
-                  backgroundColor: 'rgba(250, 245, 233, 0.08)',
-                  border: '1px solid rgba(250, 245, 233, 0.2)',
-                  color: THEME.light
-                }}
-                required
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                  <Lock size={18} style={{ color: THEME.textSecondary }} />
+                </div>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all"
+                  style={{
+                    backgroundColor: `${THEME.secondary}80`,
+                    border: `1px solid ${THEME.border}`,
+                    color: THEME.textPrimary
+                  }}
+                  required
+                />
+              </div>
             </div>
 
             {/* Submit */}
-            <button
-              type="submit"
-              className="w-full py-3 px-4 rounded-lg font-medium flex items-center justify-center gap-2"
-              style={{
-                backgroundColor: THEME.primary,
-                color: THEME.light
-              }}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <div
-                  className="w-5 h-5 border-2 border-t-transparent border-r-transparent rounded-full animate-spin"
-                  style={{ borderColor: THEME.light }}
-                />
-              ) : (
-                <>
-                  <UserPlus size={18} />
-                  <span>Create Account</span>
-                </>
-              )}
-            </button>
+            <div className="pt-2">
+              <motion.button
+                type="submit"
+                className="w-full py-3 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition-all"
+                style={{
+                  backgroundColor: THEME.accentPrimary,
+                  color: THEME.textPrimary
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div
+                    className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"
+                    style={{ borderColor: THEME.textPrimary }}
+                  />
+                ) : (
+                  <>
+                    <UserPlus size={18} />
+                    <span>Create Account</span>
+                  </>
+                )}
+              </motion.button>
+            </div>
           </form>
 
           {/* Login Link */}
-          <div
-            className="mt-6 text-center text-sm"
-            style={{ color: `${THEME.light}80` }}
-          >
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="font-medium hover:underline"
-              style={{ color: THEME.accent }}
-            >
-              Log In
-            </Link>
+          <div className="mt-6 text-center">
+            <p className="text-sm" style={{ color: THEME.textSecondary }}>
+              Already have an account?{' '}
+              <Link
+                to="/login"
+                className="font-medium hover:underline"
+                style={{ color: THEME.accentPrimary }}
+              >
+                Log In
+              </Link>
+            </p>
           </div>
         </div>
       </motion.div>
