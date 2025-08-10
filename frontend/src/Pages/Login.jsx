@@ -124,9 +124,7 @@ const Login = () => {
     Email Address
   </label>
   <div className="relative">
-    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-      <Mail size={18} style={{ color: THEME.textSecondary }} />
-    </div>
+   
     <input
       type="email"
       placeholder="your@email.com"
@@ -149,9 +147,7 @@ const Login = () => {
     Password
   </label>
   <div className="relative">
-    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-      <Lock size={18} style={{ color: THEME.textSecondary }} />
-    </div>
+  
     <input
       type="password"
       placeholder="••••••••"
