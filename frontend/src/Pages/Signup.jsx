@@ -129,9 +129,7 @@ function Signup() {
                 Full Name
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <User size={18} style={{ color: THEME.textSecondary }} />
-                </div>
+                
                 <input
                   type="text"
                   placeholder="Your name"
@@ -154,9 +152,7 @@ function Signup() {
                 Email Address
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <Mail size={18} style={{ color: THEME.textSecondary }} />
-                </div>
+                
                 <input
                   type="email"
                   placeholder="your@email.com"
@@ -179,9 +175,7 @@ function Signup() {
                 Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <Lock size={18} style={{ color: THEME.textSecondary }} />
-                </div>
+                
                 <input
                   type="password"
                   placeholder="••••••••"
