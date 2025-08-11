@@ -1,7 +1,7 @@
-// Journal.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen,
   Calendar,
@@ -18,62 +18,78 @@ import {
   Bookmark,
   BookText,
   Notebook,
-  Plus
+  Plus,
+  Feather,
+  Moon,
+  Sunrise,
+  Sunset,
+  ArrowLeft
 } from "lucide-react";
 
-/**
- * Theme (as you asked)
- */
 const THEME = {
-  primary: "#E76F51",       // Deeper coral — buttons / CTAs
-  secondary: "#5C4033",     // Cocoa brown — headings / subtle UI
-  dark: "#2B2B2B",          // Charcoal — text
-  light: "#F6F1E9",         // Soft cream — page background
-  accentPrimary: "#F4A261", // Sunset orange — CTA gradient end
-  accentSecondary: "#E9C46A",
-  cardbg : "#F8FAF6"
+  primary: "#6D28D9",       // Vibrant purple
+  secondary: "#1E1B4B",     // Dark indigo
+  dark: "#0F172A",          // Very dark blue
+  light: "#E2E8F0",         // Soft light text
+  accentPrimary: "#8B5CF6",  // Soft purple
+  accentSecondary: "#10B981", // Emerald
+  textPrimary: "#F8FAFC",    // Pure white text
+  textSecondary: "#94A3B8",  // Light gray-blue
+  cardBg: "rgba(30, 27, 75, 0.6)", // Semi-transparent
+  border: "rgba(124, 58, 237, 0.3)", // Purple border
+  paper: "rgba(249, 250, 251, 0.9)", // For text content
+  error: "#EF4444"          // Red for errors
 };
 
-/**
- * Helper - nicely format createdAt date
- */
 const formatDate = (iso) => {
   if (!iso) return "";
   try {
     return new Date(iso).toLocaleString("en-IN", {
       month: "short",
       day: "numeric",
-      year: "numeric"
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
     });
   } catch {
     return iso;
   }
 };
 
+const getTimeOfDayIcon = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return <Sunrise size={16} className="text-amber-300" />;
+  if (hour < 18) return <Sunset size={16} className="text-orange-400" />;
+  return <Moon size={16} className="text-indigo-300" />;
+};
+
 const Journal = () => {
   const navigate = useNavigate();
-
-  // form + UI state
   const [prompt, setPrompt] = useState("");
   const [entryText, setEntryText] = useState("");
   const [editingId, setEditingId] = useState(null);
-
-  // data + filters
   const [entries, setEntries] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(null);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [expandedEntry, setExpandedEntry] = useState(null);
-  const [viewMode, setViewMode] = useState("write"); // "write" or "browse"
-
+  const [viewMode, setViewMode] = useState("write");
+  const [selectedEntry, setSelectedEntry] = useState(null);
   const textareaRef = useRef(null);
+  const modalRef = useRef(null);
 
-  /**
-   * Axios instance (memoized so interceptor isn't added repeatedly)
-   * Set REACT_APP_API_URL in your env if you want.
-   */
+  // Close modal when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        setSelectedEntry(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const api = useMemo(() => {
     const inst = axios.create({
       baseURL: "http://localhost:5000",
@@ -92,15 +108,11 @@ const Journal = () => {
     return inst;
   }, []);
 
-  /**
-   * Fetch entries from backend
-   */
   const fetchEntries = async () => {
     setIsLoading(true);
     setError("");
     try {
       const resp = await api.get("/api/journals");
-      // ensure newest first
       const data = Array.isArray(resp.data) ? [...resp.data].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)) : [];
       setEntries(data);
     } catch (err) {
@@ -112,34 +124,20 @@ const Journal = () => {
 
   useEffect(() => {
     fetchEntries();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /**
-   * Centralized API error handling
-   */
   const handleApiError = (err) => {
     console.error(err);
-    if (err?.response) {
-      const s = err.response.status;
-      if (s === 401) {
-        setError("Session expired — redirecting to login...");
-        setTimeout(() => navigate("/login"), 1400);
-        return;
-      }
-      setError(err.response.data?.message || "Server error. Try again later.");
-    } else if (err?.request) {
-      setError("Network error. Check your connection.");
-    } else {
-      setError("An unexpected error occurred.");
+    if (err?.response?.status === 401) {
+      setError("Session expired — redirecting to login...");
+      setTimeout(() => navigate("/login"), 1400);
+      return;
     }
+    setError(err.response?.data?.message || "An error occurred. Please try again.");
   };
 
-  /**
-   * Submit (create or update)
-   */
   const handleSubmit = async (e) => {
-    if (e && e.preventDefault) e.preventDefault();
+    e.preventDefault();
     setError("");
     if (!entryText.trim()) {
       setError("Please write something before saving.");
@@ -154,7 +152,6 @@ const Journal = () => {
       } else {
         await api.post("/api/journals/add", payload);
       }
-      // refresh and reset
       await fetchEntries();
       setPrompt("");
       setEntryText("");
@@ -167,19 +164,13 @@ const Journal = () => {
     }
   };
 
-  /**
-   * Delete
-   */
   const handleDelete = async (id) => {
-    const c = window.confirm("Delete this entry? This cannot be undone.");
-    if (!c) return;
+    if (!window.confirm("Delete this entry? This cannot be undone.")) return;
     setIsDeleting(id);
-    setError("");
     try {
       await api.delete(`/api/journals/${id}`);
-      // optimistic: remove locally first for snappy UI
       setEntries(prev => prev.filter(e => e._id !== id));
-      if (expandedEntry === id) setExpandedEntry(null);
+      if (selectedEntry === id) setSelectedEntry(null);
     } catch (err) {
       handleApiError(err);
     } finally {
@@ -187,36 +178,17 @@ const Journal = () => {
     }
   };
 
-  /**
-   * Start editing an entry
-   */
   const handleEdit = (entry) => {
     setPrompt(entry.prompt || "");
     setEntryText(entry.entryText || "");
     setEditingId(entry._id);
     setViewMode("write");
+    setSelectedEntry(null);
     setTimeout(() => {
       textareaRef.current?.focus();
-      textareaRef.current?.setSelectionRange(textareaRef.current.value.length, textareaRef.current.value.length);
     }, 120);
   };
 
-  const cancelEdit = () => {
-    setEditingId(null);
-    setPrompt("");
-    setEntryText("");
-  };
-
-  /**
-   * Expand / collapse full text
-   */
-  const toggleExpandEntry = (id) => {
-    setExpandedEntry(prev => (prev === id ? null : id));
-  };
-
-  /**
-   * Filtered entries computed from searchQuery + entries
-   */
   const filteredEntries = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return entries;
@@ -226,9 +198,6 @@ const Journal = () => {
     );
   }, [entries, searchQuery]);
 
-  /**
-   * Auto-resize textarea for nicer UX
-   */
   useEffect(() => {
     const ta = textareaRef.current;
     if (!ta) return;
@@ -236,103 +205,92 @@ const Journal = () => {
     ta.style.height = `${ta.scrollHeight}px`;
   }, [entryText]);
 
-  /**
-   * Quick prompts sample for users — click to set.
-   */
   const SUGGESTED_PROMPTS = [
-    "What am I grateful for today?",
-    "One small win from today...",
-    "A feeling I want to acknowledge..."
+    "What brought me joy today?",
+    "What am I grateful for?",
+    "What challenged me today?",
+    "What did I learn about myself?",
+    "How am I feeling right now?",
+    "What would make today great?"
   ];
 
-  /**
-   * Styles used inline for consistent theme usage
-   */
-  const styles = {
-    page: { backgroundColor: THEME.light, minHeight: "100vh", padding: "2rem 1rem" },
-    container: { maxWidth: "1100px", margin: "0 auto" },
-    headerTitle: { color: THEME.secondary, fontWeight: 700 },
-    smallMuted: { color: THEME.secondary, opacity: 0.85 },
-    card: {
-      background: "#fffdf9",
-      border: `1px solid ${THEME.accentSecondary}33`,
-      borderRadius: 14,
-      boxShadow: "0 6px 22px rgba(43,43,43,0.06)"
-    },
-    saveButton: {
-      background: `linear-gradient(90deg, ${THEME.primary}, ${THEME.accentPrimary})`,
-      color: THEME.light,
-      boxShadow: "0 8px 24px rgba(231,111,81,0.14)"
-    },
-    secondaryBtn: {
-      background: THEME.accentSecondary,
-      color: THEME.secondary
-    },
-    journalCard: {
-      background: "#FAFAFA",
-      borderRadius: "12px",
-      padding: "20px",
-      boxShadow: "0 4px 12px rgba(43, 22, 22, 0.05)",
-      border: `1px solid ${THEME.accentSecondary}20`,
-      transition: "all 0.2s ease",
-      cursor: "pointer",
-      flex: "1 1 300px",
-      maxWidth: "100%",
-      minHeight: "200px",
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-between"
-    }
-  };
-
   return (
-    <div style={styles.page}>
-      <div style={styles.container}>
+    <div className="min-h-screen" style={{ 
+      backgroundColor: THEME.dark,
+      backgroundImage: `linear-gradient(135deg, ${THEME.secondary} 0%, ${THEME.dark} 100%)`
+    }}>
+      {/* Subtle background pattern */}
+      <div className="fixed inset-0 opacity-5 pointer-events-none"
+        style={{
+          backgroundImage: `radial-gradient(${THEME.primary} 1px, transparent 1px)`,
+          backgroundSize: '30px 30px'
+        }}
+      />
+      
+      <div className="max-w-5xl mx-auto px-4 py-8 relative z-10">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-          <div className="flex items-center gap-3">
-            <div style={{ width: 48, height: 48, borderRadius: 12, background: THEME.primary, display: "grid", placeItems: "center" }}>
-              <BookText color="#fff" />
-            </div>
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-6"
+        >
+          <div className="flex items-center gap-4">
+            <motion.div 
+              className="p-3 rounded-xl"
+              style={{ 
+                backgroundColor: `${THEME.primary}20`,
+                boxShadow: `0 0 0 4px ${THEME.primary}10`
+              }}
+              whileHover={{ rotate: 5 }}
+            >
+              <BookText size={28} style={{ color: THEME.accentPrimary }} />
+            </motion.div>
             <div>
-              <div style={styles.headerTitle} className="text-xl">InnerLight — Journal</div>
-              <div style={styles.smallMuted} className="text-sm">A calm place to offload thoughts, daily notes & reflections.</div>
+              <h1 className="text-2xl font-bold" style={{ color: THEME.textPrimary }}>Mindful Journal</h1>
+              <p className="text-sm" style={{ color: THEME.textSecondary }}>
+                A peaceful space for your thoughts and reflections
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-full" style={{ background: `${THEME.accentSecondary}20`, color: THEME.secondary }}>
-              <Bookmark size={14} />
-              <span style={{ fontSize: 13, fontWeight: 600 }}>{filteredEntries.length}</span>
-            </div>
-
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             <div className="relative flex-1 min-w-[200px]">
-              <Search size={18} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: THEME.secondary }} />
+              <Search 
+                size={18} 
+                className="absolute left-3 top-1/2 transform -translate-y-1/2" 
+                style={{ color: THEME.textSecondary }} 
+              />
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search entries..."
+                className="w-full pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
                 style={{
-                  padding: "10px 12px 10px 40px",
-                  borderRadius: 12,
-                  border: `1px solid ${THEME.accentSecondary}30`,
-                  background: THEME.light,
-                  color: THEME.dark,
-                  width: "100%"
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  border: `1px solid ${THEME.border}`,
+                  color: THEME.textPrimary
                 }}
               />
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* View mode toggle */}
-        <div className="flex mb-6">
+        <motion.div 
+          className="flex mb-8 rounded-xl overflow-hidden w-fit"
+          style={{ 
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            border: `1px solid ${THEME.border}`
+          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
           <button
             onClick={() => setViewMode("write")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-l-lg font-medium ${viewMode === "write" ? 'opacity-100' : 'opacity-70'}`}
+            className={`flex items-center gap-2 px-5 py-2 font-medium transition-all ${viewMode === "write" ? 'opacity-100' : 'opacity-70 hover:opacity-90'}`}
             style={{
-              background: viewMode === "write" ? THEME.primary : `${THEME.primary}30`,
-              color: viewMode === "write" ? THEME.light : THEME.secondary
+              backgroundColor: viewMode === "write" ? THEME.primary : 'transparent',
+              color: viewMode === "write" ? THEME.textPrimary : THEME.textSecondary
             }}
           >
             <PenLine size={16} />
@@ -340,267 +298,371 @@ const Journal = () => {
           </button>
           <button
             onClick={() => setViewMode("browse")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-r-lg font-medium ${viewMode === "browse" ? 'opacity-100' : 'opacity-70'}`}
+            className={`flex items-center gap-2 px-5 py-2 font-medium transition-all ${viewMode === "browse" ? 'opacity-100' : 'opacity-70 hover:opacity-90'}`}
             style={{
-              background: viewMode === "browse" ? THEME.primary : `${THEME.primary}30`,
-              color: viewMode === "browse" ? THEME.light : THEME.secondary
+              backgroundColor: viewMode === "browse" ? THEME.primary : 'transparent',
+              color: viewMode === "browse" ? THEME.textPrimary : THEME.textSecondary
             }}
           >
             <Notebook size={16} />
-            Past Journals
+            Past Entries
           </button>
-        </div>
+        </motion.div>
 
-        {/* Main content area */}
+        {/* Main content */}
         {viewMode === "write" ? (
-          <div style={{ ...styles.card, padding: 18 }}>
-            <div className="flex items-start justify-between mb-3">
+          <motion.div 
+            className="rounded-2xl p-6 mb-8 backdrop-blur-sm"
+            style={{ 
+              backgroundColor: THEME.cardBg,
+              border: `1px solid ${THEME.border}`,
+              boxShadow: `0 10px 30px rgba(0, 0, 0, 0.2)`
+            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="flex items-start justify-between mb-6">
               <div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: THEME.secondary }}>Write & reflect</div>
-                <div style={{ color: THEME.secondary, opacity: 0.85, fontSize: 13 }}>Emptying your mind helps clarity — no pressure, no judgments.</div>
+                <h2 className="text-xl font-bold mb-1" style={{ color: THEME.textPrimary }}>
+                  {editingId ? "Edit Your Entry" : "New Journal Entry"}
+                </h2>
+                <p className="text-sm" style={{ color: THEME.textSecondary }}>
+                  {editingId ? "Revise your thoughts" : "Express yourself freely in this safe space"}
+                </p>
               </div>
 
-              {editingId ? (
-                <div style={{ fontSize: 13, color: THEME.primary, fontWeight: 700 }} className="px-3 py-1 rounded-full">
-                  Editing
-                </div>
-              ) : null}
+              {editingId && (
+                <motion.button
+                  onClick={() => {
+                    setEditingId(null);
+                    setPrompt("");
+                    setEntryText("");
+                  }}
+                  className="px-3 py-1 rounded-lg text-sm flex items-center gap-1"
+                  style={{
+                    backgroundColor: `${THEME.primary}20`,
+                    color: THEME.primary
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <X size={14} /> Cancel
+                </motion.button>
+              )}
             </div>
 
-            {/* Prompt input & suggested chips */}
-            <div className="mb-3">
-              <label className="flex items-center gap-2 text-sm mb-2" style={{ color: THEME.secondary }}>
+            {/* Prompt input */}
+            <div className="mb-6">
+              <label className="flex items-center gap-2 mb-2 text-sm font-medium" style={{ color: THEME.textSecondary }}>
                 <Sparkles size={16} /> Guided prompt (optional)
               </label>
               <input
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="e.g., What am I grateful for today?"
+                placeholder="e.g., What's on my mind today?"
+                className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
                 style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: 10,
-                  border: `1px solid ${THEME.accentSecondary}33`,
-                  background: THEME.light,
-                  color: THEME.dark
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  border: `1px solid ${THEME.border}`,
+                  color: THEME.textPrimary
                 }}
               />
-              <div className="mt-2 flex gap-2 flex-wrap">
+              
+              <div className="mt-3 flex flex-wrap gap-2">
                 {SUGGESTED_PROMPTS.map((p) => (
-                  <button
+                  <motion.button
                     key={p}
                     onClick={() => setPrompt(p)}
-                    className="px-3 py-1 rounded-full text-sm"
+                    className="px-3 py-1 rounded-full text-sm flex items-center gap-1"
                     style={{
-                      background: "transparent",
-                      border: `1px dashed ${THEME.accentSecondary}33`,
-                      color: THEME.secondary
+                      backgroundColor: `${THEME.primary}15`,
+                      color: THEME.textPrimary,
+                      border: `1px dashed ${THEME.border}`
                     }}
+                    whileHover={{ scale: 1.05 }}
                   >
-                    {p}
-                  </button>
+                    <Feather size={12} /> {p}
+                  </motion.button>
                 ))}
               </div>
             </div>
 
-            {/* Large lined textarea */}
+            {/* Journal textarea */}
             <form onSubmit={handleSubmit}>
-              <label className="flex items-center gap-2 text-sm mb-2" style={{ color: THEME.secondary }}>
+              <label className="flex items-center gap-2 mb-2 text-sm font-medium" style={{ color: THEME.textSecondary }}>
                 <BookOpen size={16} /> Your Thoughts
               </label>
-              <textarea
-                ref={textareaRef}
-                value={entryText}
-                onChange={(e) => setEntryText(e.target.value)}
-                placeholder="Write freely — this is your private space."
-                style={{
-                  width: "100%",
-                  padding: 16,
-                  borderRadius: 12,
-                  border: `1px solid ${THEME.accentSecondary}22`,
-                  background: `repeating-linear-gradient(
-                    to bottom,
-                    ${THEME.light},
-                    ${THEME.light} 28px,
-                    rgba(0,0,0,0.02) 29px,
-                    rgba(0,0,0,0.02) 30px
-                  )`,
-                  color: THEME.dark,
-                  minHeight: 200,
-                  resize: "none",
-                  lineHeight: 1.8,
-                  fontFamily: "serif",
-                  fontSize: 15
-                }}
-              />
+              <div className="relative">
+                <textarea
+                  ref={textareaRef}
+                  value={entryText}
+                  onChange={(e) => setEntryText(e.target.value)}
+                  placeholder="Write freely here... no judgments, no rules"
+                  className="w-full p-6 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                  style={{
+                    minHeight: '250px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: `1px solid ${THEME.border}`,
+                    color: THEME.textPrimary,
+                    lineHeight: '1.8',
+                    fontFamily: 'Georgia, serif',
+                    fontSize: '16px',
+                    backgroundImage: `linear-gradient(to bottom, transparent, transparent 29px, ${THEME.border} 1px)`,
+                    backgroundSize: '100% 30px',
+                    backgroundPosition: '0 1px'
+                  }}
+                />
+                <div className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                  style={{
+                    backgroundImage: `linear-gradient(to bottom, transparent, transparent 29px, ${THEME.border} 1px)`,
+                    backgroundSize: '100% 30px',
+                    backgroundPosition: '0 1px'
+                  }}
+                />
+              </div>
 
-              {/* error */}
               {error && (
-                <div className="mt-3 flex items-center gap-2 p-3 rounded" style={{ background: "#fff0ef", color: THEME.primary }}>
-                  <X size={16} /> <div style={{ fontSize: 13 }}>{error}</div>
-                </div>
+                <motion.div 
+                  className="mt-4 p-3 rounded-lg flex items-center gap-2"
+                  style={{ 
+                    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                    color: THEME.error
+                  }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  <X size={16} /> {error}
+                </motion.div>
               )}
 
-              {/* actions */}
-              <div className="mt-4 flex items-center gap-3 justify-end">
-                {editingId && (
-                  <button
-                    type="button"
-                    onClick={cancelEdit}
-                    className="px-4 py-2 rounded-lg font-medium"
-                    style={{ ...styles.secondaryBtn }}
-                  >
-                    Cancel
-                  </button>
-                )}
-
-                <button
+              <div className="mt-6 flex justify-end">
+                <motion.button
                   type="submit"
                   disabled={isSubmitting || !entryText.trim()}
-                  className="flex items-center gap-2 px-5 py-2 rounded-full font-semibold"
+                  className="px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-all"
                   style={{
-                    ...styles.saveButton,
-                    opacity: !entryText.trim() ? 0.6 : 1,
-                    cursor: !entryText.trim() ? "not-allowed" : "pointer"
+                    background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.accentPrimary} 100%)`,
+                    color: THEME.textPrimary,
+                    opacity: !entryText.trim() ? 0.6 : 1
                   }}
+                  whileHover={{ scale: !entryText.trim() ? 1 : 1.05 }}
                 >
-                  {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-                  {editingId ? "Update" : "Save"}
-                </button>
+                  {isSubmitting ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Check size={16} />
+                  )}
+                  {editingId ? "Update Entry" : "Save Entry"}
+                </motion.button>
               </div>
             </form>
-          </div>
+          </motion.div>
         ) : (
           <div>
-            <div style={{ ...styles.card, padding: 14, marginBottom: 16 }}>
-              <div className="flex items-center justify-between mb-3">
-                <div style={{ fontWeight: 700, color: THEME.secondary, fontSize: 18 }}>Your Journal Entries</div>
-                <div style={{ fontSize: 14, color: THEME.secondary, opacity: 0.9 }}>{entries.length} saved</div>
-              </div>
-            </div>
-
-            {/* Loading / empty / list */}
-            {isLoading ? (
-              <div className="flex items-center justify-center py-10">
-                <Loader2 className="animate-spin" />
-              </div>
-            ) : entries.length === 0 ? (
-              <div className="text-center py-8" style={{ ...styles.card, padding: 24 }}>
-                <div style={{ width: 54, height: 54, margin: "0 auto", borderRadius: 12, background: THEME.primary, display: "grid", placeItems: "center" }}>
-                  <Bookmark color="#fff" />
-                </div>
-                <div style={{ marginTop: 12, fontWeight: 700, color: THEME.primary }}>No entries yet</div>
-                <div style={{ marginTop: 6, color: THEME.secondary }}>Start by writing what's on your mind.</div>
-                <button
+            {/* Entries header */}
+            <motion.div 
+              className="flex items-center justify-between mb-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <h2 className="text-xl font-bold" style={{ color: THEME.textPrimary }}>
+                Your Journal Entries
+              </h2>
+              <div className="flex items-center gap-2">
+                <span className="text-sm" style={{ color: THEME.textSecondary }}>
+                  {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
+                </span>
+                <motion.button
                   onClick={() => setViewMode("write")}
-                  className="mt-4 px-3 py-2 rounded-md flex items-center gap-2 mx-auto"
-                  style={{ ...styles.saveButton }}
+                  className="px-3 py-1 rounded-lg flex items-center gap-1 text-sm transition-all"
+                  style={{
+                    background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.accentPrimary} 100%)`,
+                    color: THEME.textPrimary
+                  }}
+                  whileHover={{ scale: 1.05 }}
                 >
-                  <Plus size={16} />
-                  New Entry
-                </button>
+                  <Plus size={14} /> New
+                </motion.button>
               </div>
-            ) : (
-              <div style={{ 
-                display: "flex", 
-                flexWrap: "wrap", 
-                gap: "16px",
-                justifyContent: "flex-start"
-              }}>
-                {filteredEntries.map((entry) => {
-                  const isExpanded = expandedEntry === entry._id;
-                  const preview = (entry.entryText || "").length > 180 ? (entry.entryText || "").slice(0, 180) + "…" : (entry.entryText || "");
-                  
-                  return (
-                    <div 
-                      key={entry._id} 
-                      style={{ 
-                        ...styles.journalCard,
-                        border: expandedEntry === entry._id ? `2px solid ${THEME.primary}` : styles.journalCard.border
-                      }}
-                      onClick={() => toggleExpandEntry(entry._id)}
-                    >
-                      <div>
-                        {entry.prompt && (
-                          <div style={{ 
-                            fontSize: 15, 
-                            color: THEME.primary, 
-                            fontWeight: 600,
-                            marginBottom: 8
-                          }}>
-                            {entry.prompt}
-                          </div>
-                        )}
-                        <div style={{ 
-                          fontSize: 16, 
-                          color: THEME.dark, 
-                          lineHeight: 1.6,
-                          whiteSpace: "pre-line",
-                          marginBottom: 12
-                        }}>
-                          {isExpanded ? entry.entryText : preview}
-                        </div>
-                      </div>
-                      
-                      <div style={{ 
-                        display: "flex", 
-                        justifyContent: "space-between",
-                        alignItems: "flex-end"
-                      }}>
-                        <div style={{ 
-                          fontSize: 13, 
-                          color: THEME.secondary,
-                          opacity: 0.8
-                        }}>
-                          {formatDate(entry.createdAt)}
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEdit(entry);
-                            }} 
-                            title="Edit" 
-                            style={{ 
-                              color: THEME.primary,
-                              background: `${THEME.primary}15`,
-                              borderRadius: 8,
-                              padding: "6px",
-                              display: "grid",
-                              placeItems: "center"
-                            }}
-                          >
-                            <Edit3 size={16} />
-                          </button>
+            </motion.div>
 
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(entry._id);
-                            }} 
-                            title="Delete" 
-                            style={{ 
-                              color: THEME.primary,
-                              background: `${THEME.primary}15`,
-                              borderRadius: 8,
-                              padding: "6px",
-                              display: "grid",
-                              placeItems: "center"
-                            }}
-                          >
-                            {isDeleting === entry._id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
-                          </button>
-                        </div>
+            {/* Entries list */}
+            {isLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="animate-spin" size={24} style={{ color: THEME.accentPrimary }} />
+              </div>
+            ) : filteredEntries.length === 0 ? (
+              <motion.div 
+                className="text-center py-12 rounded-2xl"
+                style={{ 
+                  backgroundColor: THEME.cardBg,
+                  border: `1px dashed ${THEME.border}`
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" 
+                  style={{ backgroundColor: `${THEME.primary}20` }}>
+                  <Bookmark size={28} style={{ color: THEME.accentPrimary }} />
+                </div>
+                <h3 className="text-lg font-medium mb-1" style={{ color: THEME.textPrimary }}>
+                  {searchQuery ? "No matching entries" : "Your journal is empty"}
+                </h3>
+                <p className="mb-4 text-sm" style={{ color: THEME.textSecondary }}>
+                  {searchQuery ? "Try a different search" : "Write your first entry to begin your journey"}
+                </p>
+                <motion.button
+                  onClick={() => setViewMode("write")}
+                  className="px-4 py-2 rounded-lg font-medium flex items-center gap-2 mx-auto transition-all"
+                  style={{
+                    background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.accentPrimary} 100%)`,
+                    color: THEME.textPrimary
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <PenLine size={16} /> Start Writing
+                </motion.button>
+              </motion.div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredEntries.map((entry) => (
+                  <motion.div
+                    key={entry._id}
+                    className="rounded-xl p-5 cursor-pointer backdrop-blur-sm"
+                    style={{
+                      backgroundColor: THEME.cardBg,
+                      border: `1px solid ${THEME.border}`,
+                    }}
+                    onClick={() => setSelectedEntry(entry)}
+                    whileHover={{ y: -3 }}
+                    layout
+                  >
+                    {entry.prompt && (
+                      <div className="mb-3 flex items-center gap-2">
+                        <Sparkles size={14} style={{ color: THEME.accentPrimary }} />
+                        <p className="text-sm font-medium" style={{ color: THEME.accentPrimary }}>
+                          {entry.prompt}
+                        </p>
+                      </div>
+                    )}
+                    
+                    <div className="mb-4" style={{ color: THEME.textPrimary }}>
+                      <div className="whitespace-pre-line font-serif leading-relaxed line-clamp-3">
+                        {entry.entryText}
                       </div>
                     </div>
-                  );
-                })}
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-xs" style={{ color: THEME.textSecondary }}>
+                        {getTimeOfDayIcon()}
+                        <span>{formatDate(entry.createdAt)}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
             )}
           </div>
         )}
       </div>
+
+      {/* Entry Modal */}
+      <AnimatePresence>
+        {selectedEntry && (
+          <motion.div
+            className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              ref={modalRef}
+              className="w-full max-w-2xl max-h-[90vh] rounded-2xl flex flex-col"
+              style={{
+                backgroundColor: THEME.cardBg,
+                border: `1px solid ${THEME.border}`,
+              }}
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+            >
+              {/* Modal header */}
+              <div className="p-4 border-b" style={{ borderColor: THEME.border }}>
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => setSelectedEntry(null)}
+                    className="p-2 rounded-full"
+                    style={{ backgroundColor: `${THEME.primary}20` }}
+                  >
+                    <ArrowLeft size={20} style={{ color: THEME.textPrimary }} />
+                  </button>
+                  <div className="flex gap-2">
+                    <motion.button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(selectedEntry);
+                      }}
+                      className="p-2 rounded-lg"
+                      style={{ backgroundColor: `${THEME.primary}20` }}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Edit3 size={16} style={{ color: THEME.accentPrimary }} />
+                    </motion.button>
+                    
+                    <motion.button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(selectedEntry._id);
+                      }}
+                      className="p-2 rounded-lg"
+                      style={{ backgroundColor: `${THEME.primary}20` }}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {isDeleting === selectedEntry._id ? (
+                        <Loader2 size={16} className="animate-spin" style={{ color: THEME.accentPrimary }} />
+                      ) : (
+                        <Trash2 size={16} style={{ color: THEME.accentPrimary }} />
+                      )}
+                    </motion.button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal content */}
+              <div className="p-6 overflow-y-auto flex-1">
+                {selectedEntry.prompt && (
+                  <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: `${THEME.primary}15` }}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles size={16} style={{ color: THEME.accentPrimary }} />
+                      <p className="text-sm font-medium" style={{ color: THEME.accentPrimary }}>
+                        Prompt
+                      </p>
+                    </div>
+                    <p style={{ color: THEME.textPrimary }}>{selectedEntry.prompt}</p>
+                  </div>
+                )}
+
+                <div className="p-4 rounded-lg" style={{ 
+                  backgroundColor: THEME.paper,
+                  color: THEME.dark,
+                  fontFamily: 'Georgia, serif',
+                  lineHeight: '1.8'
+                }}>
+                  <div className="whitespace-pre-line">
+                    {selectedEntry.entryText}
+                  </div>
+                </div>
+
+                <div className="mt-6 flex items-center gap-2 text-sm" style={{ color: THEME.textSecondary }}>
+                  <Calendar size={14} />
+                  <span>{formatDate(selectedEntry.createdAt)}</span>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
