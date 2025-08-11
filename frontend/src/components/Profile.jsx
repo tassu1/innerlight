@@ -13,13 +13,13 @@ const Profile = () => {
 
   const fetchData = async () => {
     try {
-      const userRes = await axios.get("http://localhost:5000/api/users/me", {
+      const userRes = await axios.get("http://localhost:3000/api/users/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUser(userRes.data);
 
       const postsRes = await axios.get(
-        `http://localhost:5000/api/forum/user/${userRes.data._id}`,
+        `http://localhost:3000/api/forum/user/${userRes.data._id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setPosts(postsRes.data);
@@ -37,7 +37,7 @@ const Profile = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/users/upload-pic",
+        "http://localhost:3000/api/users/upload-pic",
         formData,
         {
           headers: {
