@@ -1,16 +1,24 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { FaSearch, FaBookOpen, FaHeart, FaRegHeart } from "react-icons/fa";
+import { 
+  Search, BookOpen, Heart, ChevronRight,
+  RefreshCw, ChevronDown, ChevronUp, Zap
+} from "lucide-react";
 import { motion } from "framer-motion";
 
 const THEME = {
-  primary: "#4A6FA5",       // Softer blue for accents (replaced coral)
-  secondary: "#2B2B2B",     // Charcoal for backgrounds
-  dark: "#1A1A1A",          // Darker charcoal for text
-  light: "#F6F1E9",         // Soft cream for cards
-  accentPrimary: "#6B8C9E", // Muted teal (replaced sunset orange)
-  accentSecondary: "#9DB4C0"// Soft blue-gray (replaced gold)
+  primary: "#7C3AED",       // Vibrant purple
+  secondary: "#1E1B4B",     // Dark indigo
+  dark: "#0F172A",          // Very dark blue (almost black)
+  light: "#E2E8F0",         // Soft light text
+  accentPrimary: "#FFFFFF",  // White for buttons
+  accentSecondary: "#10B981", // Emerald
+  textPrimary: "#F8FAFC",    // Pure white text
+  textSecondary: "#94A3B8",  // Light gray-blue text
+  cardBg: "rgba(30, 27, 75, 0.5)", // Semi-transparent dark indigo
+  border: "rgba(124, 58, 237, 0.2)", // Purple border with transparency
+  glass: "rgba(255, 255, 255, 0.05)" // Glass effect
 };
 
 const topics = [
@@ -79,35 +87,47 @@ export default function SelfHelp() {
   });
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: THEME.light }}>
-      {/* Header - Updated with calming colors */}
+    <div className="min-h-screen" style={{ backgroundColor: THEME.dark }}>
+      {/* Updated Header with darker gradient */}
       <motion.div 
-        className="bg-gradient-to-r from-[#4A6FA5] to-[#6B8C9E] py-8 shadow-lg"
+        className="py-8 shadow-lg"
+        style={{
+          background: `linear-gradient(135deg, ${THEME.secondary} 0%, ${THEME.dark} 100%)`,
+          borderBottom: `1px solid ${THEME.border}`
+        }}
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-center text-white drop-shadow-lg">
-            <span className="inline-block mr-2">📚</span> 
+          <h1 className="text-3xl sm:text-4xl font-bold text-center" style={{ color: THEME.textPrimary }}>
             Self-Help & Personal Growth
           </h1>
-          <p className="text-center text-white/90 mt-2 max-w-2xl mx-auto">
+          <p className="text-center mt-2 max-w-2xl mx-auto" style={{ color: THEME.textSecondary }}>
             Discover books to inspire, motivate, and help you grow
           </p>
 
           {/* Search bar */}
           <div className="flex justify-center mt-6">
             <motion.div 
-              className="flex items-center bg-white/90 backdrop-blur-md rounded-full px-4 py-2 shadow-md w-full max-w-lg"
+              className="flex items-center rounded-lg px-4 py-3 shadow-md w-full max-w-lg"
+              style={{ 
+                backgroundColor: THEME.glass,
+                border: `1px solid ${THEME.border}`,
+                backdropFilter: 'blur(10px)'
+              }}
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
-              <FaSearch className="text-gray-500 mr-2" />
+              <Search className="mr-2 w-5 h-5" style={{ color: THEME.textSecondary }} />
               <input
                 type="text"
                 placeholder="Search books or authors..."
-                className="flex-grow bg-transparent outline-none text-gray-700 placeholder-gray-400"
+                className="flex-grow bg-transparent outline-none"
+                style={{ 
+                  color: THEME.textPrimary,
+                  '::placeholder': { color: THEME.textSecondary }
+                }}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
@@ -120,15 +140,19 @@ export default function SelfHelp() {
               <motion.button
                 key={t.name}
                 onClick={() => setActiveTopic(t.name === activeTopic ? "" : t.name)}
-                className={`px-4 py-1 rounded-full text-sm font-medium transition flex items-center gap-1 ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${
                   activeTopic === t.name
-                    ? "bg-white text-[#4A6FA5] shadow"
-                    : "bg-white/60 text-gray-700 hover:bg-white"
+                    ? "bg-purple-600/80 text-white shadow"
+                    : "bg-white/5 text-gray-200 hover:bg-white/10"
                 }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                style={{ 
+                  backdropFilter: 'blur(10px)',
+                  border: `1px solid ${THEME.border}`
+                }}
               >
-                <span>{t.icon}</span>
+                <span className="text-lg">{t.icon}</span>
                 <span>{t.name}</span>
               </motion.button>
             ))}
@@ -140,8 +164,8 @@ export default function SelfHelp() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {loading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="animate-pulse flex items-center gap-2" style={{ color: THEME.primary }}>
-              <FaBookOpen className="w-5 h-5 animate-pulse" />
+            <div className="animate-pulse flex items-center gap-2" style={{ color: THEME.accentPrimary }}>
+              <BookOpen className="w-5 h-5 animate-pulse" />
               <span>Loading books...</span>
             </div>
           </div>
@@ -150,28 +174,40 @@ export default function SelfHelp() {
             dataLength={filteredBooks.length}
             next={() => {}}
             hasMore={false}
-            loader={<p className="text-center">Loading more...</p>}
+            loader={
+              <div className="flex justify-center py-4">
+                <RefreshCw className="animate-spin w-5 h-5" style={{ color: THEME.primary }} />
+              </div>
+            }
           >
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
               {filteredBooks.map((book) => (
                 <motion.div
                   key={book.id}
-                  className="relative bg-white rounded-xl overflow-hidden shadow-md transition-all duration-300 hover:shadow-xl"
+                  className="relative rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl"
+                  style={{
+                    backgroundColor: THEME.cardBg,
+                    border: `1px solid ${THEME.border}`,
+                    boxShadow: `0 2px 10px ${THEME.primary}10`
+                  }}
                   whileHover={{ y: -5 }}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <div className="absolute top-2 right-2 z-10">
+                  <div className="absolute top-3 right-3 z-10">
                     <button 
                       onClick={() => toggleFavorite(book.id)}
-                      className="p-2 rounded-full bg-white/80 backdrop-blur-sm shadow"
+                      className="p-2 rounded-full backdrop-blur-sm shadow"
+                      style={{
+                        backgroundColor: favorites.has(book.id) ? 'rgba(239, 68, 68, 0.3)' : 'rgba(255, 255, 255, 0.1)',
+                        color: favorites.has(book.id) ? '#EF4444' : 'white'
+                      }}
                     >
-                      {favorites.has(book.id) ? (
-                        <FaHeart className="text-red-500" />
-                      ) : (
-                        <FaRegHeart className="text-gray-400 hover:text-red-500" />
-                      )}
+                      <Heart 
+                        className="w-4 h-4" 
+                        fill={favorites.has(book.id) ? '#EF4444' : 'transparent'}
+                      />
                     </button>
                   </div>
                   
@@ -182,25 +218,25 @@ export default function SelfHelp() {
                       loading="lazy"
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4">
                       <h2 className="text-white font-semibold text-sm sm:text-base line-clamp-2">
                         {book.title}
                       </h2>
-                      <p className="text-gray-200 text-xs line-clamp-1">
+                      <p className="text-gray-300 text-xs line-clamp-1">
                         {book.authors.map(a => a.name).join(", ") || "Unknown Author"}
                       </p>
                     </div>
                   </div>
                   
-                  <div className="p-3">
+                  <div className="p-4">
                     <div className="flex flex-wrap gap-1 mt-1">
                       {book.subjects?.slice(0, 3).map((subject, i) => (
                         <span 
                           key={i} 
-                          className="text-xs px-1.5 py-0.5 rounded-full"
+                          className="text-xs px-2 py-1 rounded-full"
                           style={{ 
-                            backgroundColor: `${THEME.primary}10`,
-                            color: THEME.dark
+                            backgroundColor: `${THEME.primary}20`,
+                            color: THEME.textPrimary
                           }}
                         >
                           {subject.split(' -- ')[0]}
@@ -208,21 +244,21 @@ export default function SelfHelp() {
                       ))}
                     </div>
                     
-                    <div className="flex justify-between items-center mt-2">
-                      <span className="text-xs" style={{ color: THEME.secondary }}>
+                    <div className="flex justify-between items-center mt-3">
+                      <span className="text-xs" style={{ color: THEME.textSecondary }}>
                         {book.download_count?.toLocaleString() || 0} downloads
                       </span>
                       <a 
                         href={`https://www.gutenberg.org/ebooks/${book.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs font-medium px-2 py-1 rounded"
+                        className="text-xs font-medium px-3 py-1.5 rounded flex items-center gap-1"
                         style={{ 
                           backgroundColor: THEME.primary,
-                          color: 'white'
+                          color: THEME.accentPrimary
                         }}
                       >
-                        Read
+                        Read <ChevronRight className="w-3 h-3" />
                       </a>
                     </div>
                   </div>
@@ -238,20 +274,24 @@ export default function SelfHelp() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <p className="text-lg" style={{ color: THEME.secondary }}>No books found matching your criteria</p>
-            <button 
+            <p className="text-lg" style={{ color: THEME.textPrimary }}>No books found matching your criteria</p>
+            <motion.button 
               onClick={() => {
                 setQuery("");
                 setActiveTopic("");
               }}
-              className="mt-4 px-4 py-2 rounded-lg font-medium"
+              className="mt-4 px-4 py-2 rounded-lg font-medium flex items-center gap-2 mx-auto"
               style={{ 
-                backgroundColor: THEME.primary,
-                color: 'white'
+                background: `linear-gradient(135deg, ${THEME.accentPrimary} 0%, #E2E8F0 100%)`,
+                color: THEME.secondary,
+                boxShadow: `0 2px 10px ${THEME.primary}30`
               }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
+              <RefreshCw className="w-4 h-4" />
               Reset filters
-            </button>
+            </motion.button>
           </motion.div>
         )}
       </div>
