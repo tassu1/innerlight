@@ -2,50 +2,81 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
 const protect = async (req, res, next) => {
-  let token;
+  console.log('\n=== New Request ===');
+  console.log('Method:', req.method);
+  console.log('Path:', req.path);
+  console.log('Headers:', {
+    authorization: req.headers.authorization ? 'present' : 'missing',
+    cookie: req.headers.cookie ? 'present' : 'missing'
+  });
 
-  // Check multiple sources for token
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
+  let token;
+  
+  if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
     token = req.headers.authorization.split(" ")[1];
+    console.log('Token from Authorization header');
   } else if (req.cookies?.token) {
     token = req.cookies.token;
+    console.log('Token from cookie');
   }
 
   if (!token) {
-    return res.status(401).json({ message: "Not authorized, no token" });
+    console.log('No token found');
+    return res.status(401).json({ 
+      success: false,
+      message: "Not authorized, no token" 
+    });
   }
 
   try {
-    // Verify token
+    console.log('Verifying token...');
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Check token structure
+    console.log('Decoded token:', {
+      id: decoded.id,
+      iat: new Date(decoded.iat * 1000),
+      exp: decoded.exp ? new Date(decoded.exp * 1000) : 'none'
+    });
+
     if (!decoded.id) {
-      return res.status(401).json({ message: "Invalid token structure" });
+      console.log('Token missing id field');
+      return res.status(401).json({ 
+        success: false,
+        message: "Invalid token structure" 
+      });
     }
 
-    // Get user and attach to request
-    req.user = await User.findById(decoded.id).select("-password");
+    console.log('Fetching user with ID:', decoded.id);
+    const user = await User.findById(decoded.id).select("-password");
     
-    if (!req.user) {
-      return res.status(401).json({ message: "User not found" });
+    if (!user) {
+      console.log('User not found in database');
+      return res.status(401).json({ 
+        success: false,
+        message: "User not found" 
+      });
     }
 
+    console.log(`User authenticated: ${user.email}`);
+    req.user = user;
     next();
   } catch (error) {
-    console.error("Token error:", error.message);
+    console.error('\nAuth Error:', error.name, '-', error.message);
     
     let message = "Not authorized, token failed";
+    let status = 401;
+    
     if (error.name === "TokenExpiredError") {
-      message = "Token expired";
+      message = "Token expired, please login again";
+      status = 403;
     } else if (error.name === "JsonWebTokenError") {
       message = "Invalid token";
+    } else {
+      message = "Authentication error";
+      status = 500;
     }
     
-    return res.status(401).json({ 
+    res.status(status).json({ 
+      success: false,
       message,
       error: error.message 
     });
