@@ -21,6 +21,7 @@ const aiRoutes = require("./routes/aiRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const friendRoutes = require("./routes/friendRoutes");
 const chatRoutes = require("./routes/chatRoutes");
+const mindGardenRoutes = require('./routes/mindGarden');
 
 dotenv.config();
 connectDB();
@@ -134,6 +135,8 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/friends", friendRoutes);
 app.use("/api/chat", chatRoutes);
+app.use('/api/mindgarden', mindGardenRoutes);
+
 
 // Root route
 app.get("/", (req, res) => {
