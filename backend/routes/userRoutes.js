@@ -1,5 +1,5 @@
 const express = require("express");
-const { registerUser, loginUser , getMe, getUserById, getFriendsByIds,searchUsersByName} = require("../controllers/userController");
+const { registerUser, loginUser , getMe, getUserById, getFriendsByIds,searchUsersByName,getProfileStats,getAchievements,updateBio} = require("../controllers/userController");
 const { protect } = require("../middlewares/authMiddleware");
 const {upload}= require("../utils/upload");
 const uploadPostImage = require("../middlewares/cloudinaryPostUpload");
@@ -23,6 +23,12 @@ router.get("/:id", protect, getUserById);
 router.post("/friends", protect, getFriendsByIds);
 
 
+// Profile routes
+router.get("/profile/stats", protect, getProfileStats);
+router.get("/profile/achievements", protect, getAchievements);
+router.patch("/profile/bio", protect, updateBio);
+
+
 
 
 router.post("/create", protect, uploadPostImage, async (req, res) => {
@@ -43,31 +49,71 @@ router.post("/create", protect, uploadPostImage, async (req, res) => {
 });
 
 
-router.post("/upload-pic", protect, upload.single("profilePicture"), async (req, res) => {
-  try {
-    if (!req.file) return res.status(400).json({ message: "No image uploaded" });
+router.post("/upload-pic", 
+  protect, 
+  upload.single("profilePicture"), 
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ 
+          success: false,
+          message: "No image file uploaded" 
+        });
+      }
 
-    const stream = cloudinary.uploader.upload_stream(
-      { folder: "profile_pics" },
-      async (error, result) => {
-        if (error) return res.status(500).json({ message: "Cloudinary error", error });
-
-        const updatedUser = await User.findByIdAndUpdate(
-          req.user._id,
-          { profilePictureUrl: result.secure_url },
-          { new: true }
+      // Cloudinary upload with promise
+      const uploadResult = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: "profile_pics",
+            transformation: [
+              { width: 500, height: 500, crop: "limit" },
+              { quality: "auto" }
+            ]
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
         );
 
-        res.json({ profilePic: updatedUser.profilePictureUrl });
-      }
-    );
+        streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
+      });
 
-    streamifier.createReadStream(req.file.buffer).pipe(stream);
-  } catch (err) {
-    console.error("Profile upload failed", err);
-    res.status(500).json({ message: "Internal error" });
+      const updatedUser = await User.findByIdAndUpdate(
+        req.user._id,
+        { profilePictureUrl: uploadResult.secure_url },
+        { new: true }
+      ).select("-password");
+
+      res.status(200).json({
+        success: true,
+        profilePic: updatedUser.profilePictureUrl,
+        message: "Profile picture updated successfully"
+      });
+
+    } catch (err) {
+      console.error("Upload error:", err);
+      
+      let status = 500;
+      let message = "Internal server error";
+      
+      if (err.message.includes("File size too large")) {
+        status = 413;
+        message = "Image size exceeds 5MB limit";
+      } else if (err.message.includes("Invalid image file")) {
+        status = 415;
+        message = "Only JPEG, PNG, or WebP images are allowed";
+      }
+
+      res.status(status).json({
+        success: false,
+        message,
+        error: err.message
+      });
+    }
   }
-});
+);
 
 
 router.get("/search", protect, searchUsersByName);
