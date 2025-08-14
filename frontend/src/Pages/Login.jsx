@@ -26,29 +26,37 @@ const Login = () => {
   const API_URL = "http://localhost:5000";
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
+  e.preventDefault();
+  setIsLoading(true);
+  setError("");
 
-    try {
-      const res = await fetch(`${API_URL}/api/users/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+  try {
+    const res = await fetch(`${API_URL}/api/users/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Login failed");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Login failed");
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("userEmail", email);
-      navigate("/dashboard");
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    // Store both token AND full user data
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify({
+      _id: data._id,
+      name: data.name,
+      email: data.email,
+      profilePic: data.profilePic,
+      mindGarden: data.mindGarden // Store mindGarden data
+    }));
+    
+    navigate("/dashboard");
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div
