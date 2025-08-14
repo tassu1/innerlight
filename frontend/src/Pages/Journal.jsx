@@ -255,11 +255,7 @@ const Journal = () => {
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <div className="relative flex-1 min-w-[200px]">
-              <Search 
-                size={18} 
-                className="absolute left-3 top-1/2 transform -translate-y-1/2" 
-                style={{ color: THEME.textSecondary }} 
-              />
+              
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
