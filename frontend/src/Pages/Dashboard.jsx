@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { 
   Smile, Frown, Meh, Laugh, Heart, 
-  BarChart2, BookOpen, Users, MessageSquare,
+  BarChart2, BookOpen, MessageSquare,
   RefreshCw, Sparkles, ChevronRight, Activity,
-  Calendar, TrendingUp, TrendingDown, ChevronDown,
-  ChevronUp, Zap, Bot, Menu, Search, Bell
+  Calendar, TrendingUp, TrendingDown, Zap, Bot
 } from "lucide-react";
 import MoodChart from "../components/MoodChart";
 import axios from "axios";
@@ -33,20 +32,17 @@ const moodColors = {
   5: "#8B5CF6"  // Violet
 };
 
-
 const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState({
     quote: "Be kind to yourself — every day is a fresh start.",
     moodLevel: "",
     note: "",
     alreadyLogged: false,
-    communityPosts: [],
     activeChats: [],
     aiTip: "Take 10 minutes to breathe deeply today 💗",
     stats: {
       moodTrend: 'up',
       journalStreak: 0,
-      communityEngagement: 0,
       weeklyAvgMood: 0,
       moodDistribution: [20, 30, 50, 40, 10],
       weeklyComparison: 12,
@@ -72,10 +68,10 @@ const Dashboard = () => {
       const res = await axios.get("http://localhost:5000/api/users/me", {
         headers: { Authorization: `Bearer ${token}` }
       });
-      return res.data;
+      return res.data.data;
     } catch (err) {
       console.error("Error fetching user data:", err);
-      return { name: "Friend" };
+      return { name: "" }; // Return empty name instead of "Friend"
     }
   };
 
@@ -83,15 +79,11 @@ const Dashboard = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      
       const userData = await fetchUserData();
       
       try {
-        const [quoteRes, postsRes, chatsRes, statsRes, todayMoodRes] = await Promise.all([
+        const [quoteRes, chatsRes, statsRes, todayMoodRes] = await Promise.all([
           axios.get("http://localhost:5000/api/quotes/random"),
-          axios.get("http://localhost:5000/api/forum/latest", { 
-            headers: { Authorization: `Bearer ${token}` } 
-          }).catch(() => ({ data: [] })),
           axios.get("http://localhost:5000/api/chatbot/history", { 
             headers: { Authorization: `Bearer ${token}` } 
           }).catch(() => ({ data: [] })),
@@ -104,9 +96,8 @@ const Dashboard = () => {
         ]);
 
         setDashboardData({
-          userName: userData.name || "Friend",
+          userName: userData.name || "", // Use empty string if name not available
           quote: `${quoteRes.data.q} — ${quoteRes.data.a}`,
-          communityPosts: postsRes.data.slice(0, 3),
           activeChats: chatsRes.data.slice(0, 2),
           stats: {
             ...dashboardData.stats,
@@ -121,7 +112,7 @@ const Dashboard = () => {
         console.error("Partial dashboard data error:", err);
         setDashboardData(prev => ({
           ...prev,
-          userName: userData.name || "Friend"
+          userName: userData.name || ""
         }));
       }
 
@@ -182,9 +173,6 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: THEME.dark }}>
-      {/* Top Navigation */}
-      
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Header */}
         <motion.div 
@@ -200,7 +188,7 @@ const Dashboard = () => {
           <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
-                Welcome back, <span className="text-white font-semibold">{dashboardData.userName}</span> 👋
+                Welcome{dashboardData.userName ? ` ${dashboardData.userName}` : ''} 👋
               </h1>
               <p className="text-white/80 italic max-w-2xl">
                 {dashboardData.quote}
@@ -230,7 +218,7 @@ const Dashboard = () => {
         </motion.div>
         
         {/* Stats Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
           {/* Mood Stats Card */}
           <motion.div 
             className="rounded-xl p-4"
@@ -295,7 +283,7 @@ const Dashboard = () => {
             </div>
           </motion.div>
 
-          {/* Community Engagement Card */}
+          {/* Weekly Comparison Card */}
           <motion.div 
             className="rounded-xl p-4"
             style={{ 
@@ -306,27 +294,23 @@ const Dashboard = () => {
             whileHover={{ y: -5 }}
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm" style={{ color: THEME.textSecondary }}>Community</span>
-              <Users className="w-4 h-4" style={{ color: THEME.accentPrimary }} />
+              <span className="text-sm" style={{ color: THEME.textSecondary }}>Weekly Change</span>
+              {dashboardData.stats.weeklyComparison >= 0 ? (
+                <TrendingUp className="w-4 h-4" style={{ color: THEME.accentSecondary }} />
+              ) : (
+                <TrendingDown className="w-4 h-4" style={{ color: '#EF4444' }} />
+              )}
             </div>
-            <div className="flex items-end gap-2">
-              <span className="text-2xl font-bold" style={{ color: THEME.textPrimary }}>
-                {dashboardData.stats.communityEngagement}
+            <div className="flex items-end gap-1">
+              <span className="text-2xl font-bold" style={{ 
+                color: dashboardData.stats.weeklyComparison >= 0 ? THEME.accentSecondary : '#EF4444'
+              }}>
+                {dashboardData.stats.weeklyComparison >= 0 ? '+' : ''}{dashboardData.stats.weeklyComparison}%
               </span>
-              <span className="text-xs mb-1" style={{ color: THEME.textSecondary }}>interactions</span>
             </div>
             <div className="mt-2">
-              <div className="text-xs flex items-center gap-1" style={{ color: THEME.textSecondary }}>
-                <span>Top {dashboardData.stats.communityPercentile}%</span>
-                <div className="w-8 h-1 rounded-full overflow-hidden" style={{ backgroundColor: `${THEME.secondary}80` }}>
-                  <div 
-                    className="h-full rounded-full" 
-                    style={{ 
-                      width: `${dashboardData.stats.communityPercentile}%`,
-                      background: `linear-gradient(90deg, ${THEME.primary}, ${THEME.accentPrimary})`
-                    }}
-                  />
-                </div>
+              <div className="text-xs" style={{ color: THEME.textSecondary }}>
+                vs last week
               </div>
             </div>
           </motion.div>
@@ -350,14 +334,6 @@ const Dashboard = () => {
                 {dashboardData.stats.aiSessions}
               </span>
               <span className="text-xs mb-1" style={{ color: THEME.textSecondary }}>this month</span>
-            </div>
-            <div className="mt-2">
-              <div className="text-xs" style={{ 
-                color: dashboardData.stats.aiSessionsChange >= 0 ? THEME.accentSecondary : '#F43F5E'
-              }}>
-                {dashboardData.stats.aiSessionsChange >= 0 ? '+' : ''}
-                {dashboardData.stats.aiSessionsChange} from last week
-              </div>
             </div>
           </motion.div>
         </div>
@@ -592,7 +568,7 @@ const Dashboard = () => {
 
         {/* Bottom Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Community Posts */}
+          {/* AI Tips Card */}
           <motion.div 
             className="rounded-xl p-6"
             style={{ 
@@ -604,214 +580,128 @@ const Dashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.3 }}
           >
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold flex items-center gap-2" style={{ color: THEME.textPrimary }}>
-                <Users className="w-5 h-5" style={{ color: THEME.accentPrimary }} />
-                Recent Community Activity
+                <Sparkles className="w-5 h-5" style={{ color: THEME.accentPrimary }} />
+                Daily Wellness Tip
               </h2>
               <button 
-                onClick={() => navigate("/community")}
+                onClick={fetchDashboardData}
+                className="text-xs flex items-center gap-1"
+                style={{ color: THEME.textSecondary }}
+              >
+                <RefreshCw className="w-3 h-3" />
+                New Tip
+              </button>
+            </div>
+            <div className="p-4 rounded-lg"
+              style={{ 
+                backgroundColor: `${THEME.primary}10`,
+                borderLeft: `3px solid ${THEME.primary}`
+              }}
+            >
+              <p className="italic text-sm" style={{ color: THEME.textPrimary }}>{dashboardData.aiTip}</p>
+              <div className="text-xs mt-2 flex items-center gap-1" style={{ color: THEME.textSecondary }}>
+                <span>From InnerLight AI</span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Active Chats Card */}
+          <motion.div 
+            className="rounded-xl p-6"
+            style={{ 
+              backgroundColor: THEME.cardBg,
+              border: `1px solid ${THEME.border}`,
+              boxShadow: `0 2px 10px ${THEME.primary}10`
+            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.4 }}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold flex items-center gap-2" style={{ color: THEME.textPrimary }}>
+                <MessageSquare className="w-5 h-5" style={{ color: THEME.accentPrimary }} />
+                Your Conversations
+              </h2>
+              <button 
+                onClick={() => navigate("/chatbot")}
                 className="text-xs flex items-center gap-1"
                 style={{ color: THEME.textSecondary }}
               >
                 View All <ChevronRight className="w-3 h-3" />
               </button>
             </div>
-            {dashboardData.communityPosts.length > 0 ? (
+            {dashboardData.activeChats.length > 0 ? (
               <div className="space-y-4">
-                {dashboardData.communityPosts.map((post, index) => (
+                {dashboardData.activeChats.map((chat, index) => (
                   <motion.div 
                     key={index}
                     className="p-4 rounded-lg hover:bg-primary/5 cursor-pointer transition-colors"
                     style={{ backgroundColor: `${THEME.primary}05` }}
                     whileHover={{ x: 5 }}
-                    onClick={() => navigate(`/community/post/${post._id}`)}
+                    onClick={() => navigate(`/chat/${chat._id}`)}
                   >
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-8 h-8 rounded-full flex items-center justify-center" 
-                        style={{ backgroundColor: `${THEME.accentPrimary}20` }}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke={THEME.accentPrimary}>
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
+                        style={{ 
+                          backgroundColor: chat.isAI ? `${THEME.primary}20` : `${THEME.secondary}20`
+                        }}
+                      >
+                        {chat.isAI ? (
+                          <Bot className="w-5 h-5" style={{ color: THEME.primary }} />
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke={THEME.secondary}>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        )}
                       </div>
                       <span className="font-medium text-sm" style={{ color: THEME.textPrimary }}>
-                        {post.author?.name || "Anonymous"}
+                        {chat.isAI ? "InnerLight AI" : chat.participants?.find(p => p._id !== localStorage.getItem("userId"))?.name || "Chat"}
                       </span>
                       <span className="text-xs" style={{ color: THEME.textSecondary }}>
-                        {new Date(post.createdAt).toLocaleDateString()}
+                        {new Date(chat.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                     <p className="text-sm line-clamp-2" style={{ color: THEME.textPrimary }}>
-                      {post.content}
+                      {chat.lastMessage?.content || "No messages yet"}
                     </p>
-                    <div className="flex items-center gap-3 mt-3">
-                      <div className="flex items-center gap-1 text-xs" style={{ color: THEME.textSecondary }}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-                        </svg>
-                        {post.likes || 0}
-                      </div>
-                      <div className="flex items-center gap-1 text-xs" style={{ color: THEME.textSecondary }}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
-                        {post.comments?.length || 0}
-                      </div>
-                    </div>
                   </motion.div>
                 ))}
               </div>
             ) : (
               <div className="text-center py-6">
-                <p style={{ color: THEME.textSecondary }}>No recent posts yet</p>
-                <button 
-                  onClick={() => navigate("/community/new")}
-                  className="mt-2 text-sm font-medium"
-                  style={{ color: THEME.accentPrimary }}
-                >
-                  Be the first to post!
-                </button>
-              </div>
-            )}
-          </motion.div>
-
-          {/* AI Tips & Chats */}
-          <div className="space-y-6">
-            {/* AI Tip Card */}
-            <motion.div 
-              className="rounded-xl p-6"
-              style={{ 
-                backgroundColor: THEME.cardBg,
-                border: `1px solid ${THEME.border}`,
-                boxShadow: `0 2px 10px ${THEME.primary}10`
-              }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.3 }}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold flex items-center gap-2" style={{ color: THEME.textPrimary }}>
-                  <Sparkles className="w-5 h-5" style={{ color: THEME.accentPrimary }} />
-                  Daily Wellness Tip
-                </h2>
-                <button 
-                  onClick={fetchDashboardData}
-                  className="text-xs flex items-center gap-1"
-                  style={{ color: THEME.textSecondary }}
-                >
-                  <RefreshCw className="w-3 h-3" />
-                  New Tip
-                </button>
-              </div>
-              <div className="p-4 rounded-lg"
-                style={{ 
-                  backgroundColor: `${THEME.primary}10`,
-                  borderLeft: `3px solid ${THEME.primary}`
-                }}
-              >
-                <p className="italic text-sm" style={{ color: THEME.textPrimary }}>{dashboardData.aiTip}</p>
-                <div className="text-xs mt-2 flex items-center gap-1" style={{ color: THEME.textSecondary }}>
-                  <span>From InnerLight AI</span>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Active Chats Card */}
-            <motion.div 
-              className="rounded-xl p-6"
-              style={{ 
-                backgroundColor: THEME.cardBg,
-                border: `1px solid ${THEME.border}`,
-                boxShadow: `0 2px 10px ${THEME.primary}10`
-              }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.4 }}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold flex items-center gap-2" style={{ color: THEME.textPrimary }}>
-                  <MessageSquare className="w-5 h-5" style={{ color: THEME.accentPrimary }} />
-                  Your Conversations
-                </h2>
-                <button 
-                  onClick={() => navigate("/chatbot")}
-                  className="text-xs flex items-center gap-1"
-                  style={{ color: THEME.textSecondary }}
-                >
-                  View All <ChevronRight className="w-3 h-3" />
-                </button>
-              </div>
-              {dashboardData.activeChats.length > 0 ? (
-                <div className="space-y-4">
-                  {dashboardData.activeChats.map((chat, index) => (
+                <p style={{ color: THEME.textSecondary }}>No active conversations</p>
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  {chatStarters.map((prompt, i) => (
                     <motion.div 
-                      key={index}
-                      className="p-4 rounded-lg hover:bg-primary/5 cursor-pointer transition-colors"
-                      style={{ backgroundColor: `${THEME.primary}05` }}
-                      whileHover={{ x: 5 }}
-                      onClick={() => navigate(`/chat/${chat._id}`)}
+                      key={i}
+                      className="p-3 rounded-lg cursor-pointer"
+                      style={{ backgroundColor: `${THEME.secondary}10` }}
+                      whileHover={{ scale: 1.02 }}
+                      onClick={() => navigate('/chatbot', { state: { initialMessage: prompt } })}
                     >
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center" 
-                          style={{ 
-                            backgroundColor: chat.isAI ? `${THEME.primary}20` : `${THEME.secondary}20`
-                          }}
-                        >
-                          {chat.isAI ? (
-                            <Bot className="w-5 h-5" style={{ color: THEME.primary }} />
-                          ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke={THEME.secondary}>
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                          )}
-                        </div>
-                        <span className="font-medium text-sm" style={{ color: THEME.textPrimary }}>
-                          {chat.isAI ? "InnerLight AI" : chat.participants?.find(p => p._id !== localStorage.getItem("userId"))?.name || "Chat"}
-                        </span>
-                        <span className="text-xs" style={{ color: THEME.textSecondary }}>
-                          {new Date(chat.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                      <p className="text-sm line-clamp-2" style={{ color: THEME.textPrimary }}>
-                        {chat.lastMessage?.content || "No messages yet"}
-                      </p>
+                      <p className="text-xs" style={{ color: THEME.textPrimary }}>{prompt}</p>
                     </motion.div>
                   ))}
                 </div>
-              ) : (
-                <div className="text-center py-6">
-                  <p style={{ color: THEME.textSecondary }}>No active conversations</p>
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-                    {chatStarters.map((prompt, i) => (
-                      <motion.div 
-                        key={i}
-                        className="p-3 rounded-lg cursor-pointer"
-                        style={{ backgroundColor: `${THEME.secondary}10` }}
-                        whileHover={{ scale: 1.02 }}
-                        onClick={() => navigate('/chatbot', { state: { initialMessage: prompt } })}
-                      >
-                        <p className="text-xs" style={{ color: THEME.textPrimary }}>{prompt}</p>
-                      </motion.div>
-                    ))}
-                  </div>
-                  <motion.button 
-                    onClick={() => navigate("/chatbot")}
-                    className="mt-4 w-full py-2 rounded-lg font-medium flex items-center justify-center gap-2"
-                    style={{ 
-                      background: `linear-gradient(135deg, ${THEME.accentPrimary} 0%, #E2E8F0 100%)`,
-                      color: THEME.secondary,
-                      boxShadow: `0 2px 10px ${THEME.primary}30`
-                    }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                    Chat with InnerLight AI
-                  </motion.button>
-                </div>
-              )}
-            </motion.div>
-          </div>
+                <motion.button 
+                  onClick={() => navigate("/chatbot")}
+                  className="mt-4 w-full py-2 rounded-lg font-medium flex items-center justify-center gap-2"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${THEME.accentPrimary} 0%, #E2E8F0 100%)`,
+                    color: THEME.secondary,
+                    boxShadow: `0 2px 10px ${THEME.primary}30`
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Chat with InnerLight AI
+                </motion.button>
+              </div>
+            )}
+          </motion.div>
         </div>
       </div>
     </div>
