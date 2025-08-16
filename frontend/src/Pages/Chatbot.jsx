@@ -326,13 +326,17 @@ const Chatbot = () => {
         </AnimatePresence>
 
         {/* Chat Area */}
-        <div className="flex-1 flex flex-col relative">
-          {/* Messages container */}
+        <div className="flex-1 flex flex-col relative h-full">
+          {/* Messages container with proper padding */}
           <div 
             ref={chatContainerRef}
-            className="flex-1 overflow-y-auto px-4 pt-4 pb-16" // Extra padding at bottom for input
+            className="flex-1 overflow-y-auto px-4 pt-4 pb-24"
+            style={{
+              scrollBehavior: 'smooth',
+              paddingBottom: '6rem'
+            }}
           >
-            <div className="space-y-2 max-h-4xl mx-auto h-full px-4">
+            <div className="max-w-4xl mx-auto space-y-2">
               <AnimatePresence>
                 {messages.map((message) => (
                   <motion.div
@@ -350,11 +354,11 @@ const Chatbot = () => {
                       }`}
                       style={{ 
                         backgroundColor: message.sender === 'user' 
-                          ? '#FFFFFF'  // White background for user messages
+                          ? '#FFFFFF'
                           : THEME.cardBg,
                         border: `1px solid ${THEME.border}`,
                         color: message.sender === 'user' 
-                          ? '#1E293B'  // Dark text for user messages
+                          ? '#1E293B'
                           : THEME.textPrimary
                       }}
                       whileHover={{ scale: 1.01 }}
@@ -392,68 +396,68 @@ const Chatbot = () => {
             </div>
           </div>
 
-          {/* Input Box */}
-          {/* Input Box */}
-<div className="absolute bottom-0 left-0 right-0 p-4 z-20 backdrop-blur-md"
-  style={{ 
-    backgroundColor: THEME.cardBg,
-    borderTop: `1px solid ${THEME.border}`
-  }}
->
-  <div className="max-w-4xl mx-auto w-full px-4">
-    <div className="flex items-end gap-2">
-      <div className="flex-1 relative">
-        <textarea
-          ref={inputRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Type your message..."
-          rows={1}
-          className="w-full p-3 pr-10 rounded-xl focus:outline-none resize-none text-sm transition-all"
-          style={{ 
-            minHeight: '48px',
-            maxHeight: '120px',
-            backgroundColor: `${THEME.secondary}80`,
-            color: THEME.textPrimary,
-            border: `1px solid ${THEME.border}`,
-            boxShadow: `0 2px 10px ${THEME.primary}10`
-          }}
-        />
-        {charCount > 0 && (
-          <span className={`absolute right-3 bottom-3 text-xs ${
-            charCount > 1000 ? 'text-red-400' : 'text-gray-400'
-          }`}>
-            {charCount}/1000
-          </span>
-        )}
-      </div>
-      <motion.button
-        onClick={handleSend}
-        disabled={!input.trim() || charCount > 1000 || loading}
-        className={`p-3 rounded-xl flex items-center justify-center ${
-          !input.trim() || charCount > 1000 || loading
-            ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-            : 'bg-white hover:bg-gray-100 text-black' // Changed to white bg and purple text
-        }`}
-        style={{
-          height: '48px',
-          width: '48px',
-          flexShrink: 0,
-          marginBottom: '6px' // Added to slightly lift the button
-        }}
-        whileHover={{ scale: !input.trim() || charCount > 1000 || loading ? 1 : 1.05 }}
-        whileTap={{ scale: !input.trim() || charCount > 1000 || loading ? 1 : 0.95 }}
-      >
-        {loading ? (
-          <Loader2 className="animate-spin" size={18} />
-        ) : (
-          <Send size={18} />
-        )}
-      </motion.button>
-    </div>
-  </div>
-</div>
+          {/* Fixed Input Box */}
+          <div className="sticky bottom-0 left-0 right-0 p-4 z-20 backdrop-blur-md"
+            style={{ 
+              backgroundColor: THEME.cardBg,
+              borderTop: `1px solid ${THEME.border}`,
+              paddingBottom: '1.5rem'
+            }}
+          >
+            <div className="max-w-4xl mx-auto w-full px-4">
+              <div className="flex items-end gap-2">
+                <div className="flex-1 relative">
+                  <textarea
+                    ref={inputRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Type your message..."
+                    rows={1}
+                    className="w-full p-3 pr-10 rounded-xl focus:outline-none resize-none text-sm transition-all"
+                    style={{ 
+                      minHeight: '48px',
+                      maxHeight: '120px',
+                      backgroundColor: `${THEME.secondary}80`,
+                      color: THEME.textPrimary,
+                      border: `1px solid ${THEME.border}`,
+                      boxShadow: `0 2px 10px ${THEME.primary}10`
+                    }}
+                  />
+                  {charCount > 0 && (
+                    <span className={`absolute right-3 bottom-3 text-xs ${
+                      charCount > 1000 ? 'text-red-400' : 'text-gray-400'
+                    }`}>
+                      {charCount}/1000
+                    </span>
+                  )}
+                </div>
+                <motion.button
+                  onClick={handleSend}
+                  disabled={!input.trim() || charCount > 1000 || loading}
+                  className={`p-3 rounded-xl flex items-center justify-center ${
+                    !input.trim() || charCount > 1000 || loading
+                      ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                      : 'bg-white hover:bg-gray-100 text-black'
+                  }`}
+                  style={{
+                    height: '48px',
+                    width: '48px',
+                    flexShrink: 0,
+                    marginBottom: '6px'
+                  }}
+                  whileHover={{ scale: !input.trim() || charCount > 1000 || loading ? 1 : 1.05 }}
+                  whileTap={{ scale: !input.trim() || charCount > 1000 || loading ? 1 : 0.95 }}
+                >
+                  {loading ? (
+                    <Loader2 className="animate-spin" size={18} />
+                  ) : (
+                    <Send size={18} />
+                  )}
+                </motion.button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
