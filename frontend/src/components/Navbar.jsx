@@ -342,10 +342,11 @@ const Navbar = () => {
               <span className="text-md">Chat</span>
             </motion.button>
 
+            
             <motion.button
-              onClick={() => navigate("/community")}
+              onClick={() => navigate("/journal")}
               className={`px-3 py-2 rounded-lg flex items-center gap-2 transition-colors ${
-                location.pathname === "/community" ? 
+                location.pathname === "/journal" ? 
                 `bg-${THEME.primary}20 text-${THEME.textPrimary}` : 
                 `hover:bg-${THEME.primary}10 text-${THEME.textPrimary}`
               }`}
@@ -353,9 +354,10 @@ const Navbar = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-             
-              <span className="text-md">Community</span>
+              
+              <span className="text-md">Journal</span>
             </motion.button>
+            
 
             <motion.button
               onClick={() => navigate("/resources")}
@@ -372,20 +374,7 @@ const Navbar = () => {
               <span className="text-md">Resources</span>
             </motion.button>
 
-            <motion.button
-              onClick={() => navigate("/journal")}
-              className={`px-3 py-2 rounded-lg flex items-center gap-2 transition-colors ${
-                location.pathname === "/journal" ? 
-                `bg-${THEME.primary}20 text-${THEME.textPrimary}` : 
-                `hover:bg-${THEME.primary}10 text-${THEME.textPrimary}`
-              }`}
-              style={{ color: THEME.textPrimary }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              
-              <span className="text-md">Journal</span>
-            </motion.button>
+           
           </div>
 
           {/* Right side navigation */}
@@ -553,36 +542,8 @@ const Navbar = () => {
                     <User size={16} />
                     <span>Your Profile</span>
                   </motion.button>
-                  <motion.button
-                    className="w-full px-4 py-3 text-left hover:bg-theme-primary/10 transition-colors flex items-center gap-3 border-b"
-                    style={{
-                      color: THEME.textPrimary,
-                      borderColor: THEME.border
-                    }}
-                    onClick={() => {
-                      navigate("/settings");
-                      setShowProfile(false);
-                    }}
-                    whileHover={{ x: 5 }}
-                  >
-                    <Settings size={16} />
-                    <span>Settings</span>
-                  </motion.button>
-                  <motion.button
-                    className="w-full px-4 py-3 text-left hover:bg-theme-primary/10 transition-colors flex items-center gap-3 border-b"
-                    style={{
-                      color: THEME.textPrimary,
-                      borderColor: THEME.border
-                    }}
-                    onClick={() => {
-                      navigate("/help");
-                      setShowProfile(false);
-                    }}
-                    whileHover={{ x: 5 }}
-                  >
-                    <HelpCircle size={16} />
-                    <span>Help & Support</span>
-                  </motion.button>
+                  
+
                   <motion.button
                     className="w-full px-4 py-3 text-left hover:bg-red-900/20 transition-colors flex items-center gap-3"
                     style={{ color: "#F87171" }}
@@ -639,17 +600,16 @@ const Navbar = () => {
               <span>Chat</span>
             </motion.button>
 
-            <motion.button
+             <motion.button
               onClick={() => {
-                navigate("/community");
+                navigate("/journal");
                 setMobileMenuOpen(false);
               }}
               className="w-full px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-theme-primary/10 transition-colors"
               style={{ color: THEME.textPrimary }}
               whileHover={{ x: 5 }}
-            >
-              
-              <span>Community</span>
+            > 
+              <span>Journal</span>
             </motion.button>
 
             <motion.button
@@ -665,53 +625,6 @@ const Navbar = () => {
               <span>Resources</span>
             </motion.button>
 
-            <motion.button
-              onClick={() => {
-                navigate("/journal");
-                setMobileMenuOpen(false);
-              }}
-              className="w-full px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-theme-primary/10 transition-colors"
-              style={{ color: THEME.textPrimary }}
-              whileHover={{ x: 5 }}
-            >
-              
-              <span>Journal</span>
-            </motion.button>
-
-            <motion.button
-              onClick={() => {
-                navigate("/profile");
-                setMobileMenuOpen(false);
-              }}
-              className="w-full px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-theme-primary/10 transition-colors"
-              style={{ color: THEME.textPrimary }}
-              whileHover={{ x: 5 }}
-            >
-              <User size={20} />
-              <span>Profile</span>
-            </motion.button>
-
-            <div className="px-4 py-3 border-t" style={{ borderColor: THEME.border }}>
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-xs" style={{ color: THEME.textPrimary }}>
-                    Signed in as
-                  </p>
-                  <p className="text-sm truncate" style={{ color: THEME.accentPrimary }}>
-                    {localStorage.getItem("userEmail") || "User"}
-                  </p>
-                </div>
-                <motion.button
-                  className="px-3 py-1 rounded-lg flex items-center gap-2"
-                  style={{ color: "#F87171" }}
-                  onClick={logoutHandler}
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <LogOut size={16} />
-                  <span className="text-sm">Sign Out</span>
-                </motion.button>
-              </div>
-            </div>
           </div>
         </motion.div>
       )}
