@@ -6,23 +6,42 @@ const userSchema = new mongoose.Schema(
     name: {
       type: String,
       required: [true, "Please enter your name"],
+      trim: true
     },
     email: {
       type: String,
       required: [true, "Please enter your email"],
       unique: true,
-    },
-    lastSeen: {
-      type: Date,
-      default: Date.now
+      trim: true,
+      lowercase: true
     },
     password: {
       type: String,
       required: [true, "Please enter a password"],
+      minlength: [6, 'Password must be at least 6 characters']
     },
     profilePic: {
       type: String,
-      default: "",
+      default: "default-avatar.png",
+      validate: {
+        validator: function(v) {
+          return v === "default-avatar.png" || 
+                 v.startsWith('http') || 
+                 v.startsWith('/uploads/');
+        },
+        message: props => `${props.value} is not a valid image path/URL!`
+      },
+      maxlength: [500, 'Profile picture path too long']
+    },
+    bio: {
+      type: String,
+      default: "Focused on self-growth & mindfulness.",
+      maxlength: [250, 'Bio cannot be longer than 250 characters'],
+      trim: true
+    },
+    lastSeen: {
+      type: Date,
+      default: Date.now
     },
     friends: [
       {
@@ -51,37 +70,40 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     }],
-    // ===== NEW MIND GARDEN ADDITIONS =====
     mindGarden: {
-  habits: [{
-    _id: mongoose.Schema.Types.ObjectId,
-    name: String,
-    icon: String,
-    description: String,
-    completed: Boolean,
-    xpValue: { type: Number, default: 5 } // XP per completion
-  }],
-  growth: {
-    level: { type: Number, default: 1 },
-    xp: { type: Number, default: 0 },
-    streak: { type: Number, default: 0 },
-    lastUpdated: Date
+      habits: [{
+        _id: mongoose.Schema.Types.ObjectId,
+        name: String,
+        icon: String,
+        description: String,
+        completed: Boolean,
+        xpValue: { type: Number, default: 5 }
+      }],
+      growth: {
+        level: { type: Number, default: 1 },
+        xp: { type: Number, default: 0 },
+        streak: { type: Number, default: 0 },
+        lastUpdated: Date
+      },
+      history: [{
+        date: Date,
+        completedHabits: [{
+          habitId: mongoose.Schema.Types.ObjectId,
+          name: String,
+          xpEarned: Number
+        }],
+        totalXp: Number
+      }]
+    }
   },
-  history: [{
-    date: Date,
-    completedHabits: [{
-      habitId: mongoose.Schema.Types.ObjectId,
-      name: String,
-      xpEarned: Number
-    }],
-    totalXp: Number
-  }]
-}
-  },
-  { timestamps: true }
+  { 
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
 );
 
-// Encrypt password (existing)
+// Password hashing middleware
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   const salt = await bcrypt.genSalt(10);
@@ -89,12 +111,27 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-// Match password method (existing)
+// Password comparison method
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// ===== NEW MIND GARDEN METHODS =====
+// Profile picture update method
+userSchema.methods.updateProfilePicture = async function(newUrl) {
+  this.profilePic = newUrl;
+  return this.save();
+};
+
+// Bio update method
+userSchema.methods.updateBio = async function(newBio) {
+  if (newBio.length > 250) {
+    throw new Error('Bio exceeds maximum length');
+  }
+  this.bio = newBio;
+  return this.save();
+};
+
+// Mind Garden update method
 userSchema.methods.updateMindGarden = async function(habitUpdates) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
