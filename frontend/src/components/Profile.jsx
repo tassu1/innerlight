@@ -10,6 +10,8 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+const API_URL = import.meta.env.API_URL;
+
 
 const THEME = {
   primary: "#7C3AED",       // Vibrant purple
@@ -46,16 +48,16 @@ const useAuth = () => {
 };
 
 const api = {
-  getUserProfile: (token) => axios.get("http://localhost:5000/api/users/me", { 
+  getUserProfile: (token) => axios.get(`${API_URL}/api/users/me`, { 
     headers: { Authorization: `Bearer ${token}` } 
   }).then(res => res.data),
   
-  getProfileStats: (token) => axios.get("http://localhost:5000/api/users/profile/stats", { 
+  getProfileStats: (token) => axios.get(`${API_URL}/api/users/profile/stats`, { 
     headers: { Authorization: `Bearer ${token}` } 
   }).then(res => res.data),
   
   updateBio: (bio, token) => axios.patch(
-    "http://localhost:5000/api/users/profile/bio",
+    `${API_URL}/api/users/profile/bio`,
     { bio },
     { 
       headers: { 
