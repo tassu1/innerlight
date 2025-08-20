@@ -25,6 +25,7 @@ import {
   Sunset,
   ArrowLeft
 } from "lucide-react";
+const API_URL = import.meta.env.API_URL;
 
 const THEME = {
   primary: "#6D28D9",       // Vibrant purple
@@ -79,6 +80,10 @@ const Journal = () => {
   const textareaRef = useRef(null);
   const modalRef = useRef(null);
 
+
+
+
+
   // Close modal when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -92,7 +97,7 @@ const Journal = () => {
 
   const api = useMemo(() => {
     const inst = axios.create({
-      baseURL: "http://localhost:5000",
+      baseURL: API_URL,
       headers: { "Content-Type": "application/json" }
     });
 
@@ -106,7 +111,7 @@ const Journal = () => {
     );
 
     return inst;
-  }, []);
+  }, [API_URL]);
 
   const fetchEntries = async () => {
     setIsLoading(true);
