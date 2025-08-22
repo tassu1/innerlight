@@ -6,10 +6,15 @@ const moodSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-  mood: {
-    type: String,
-    enum: ["very sad", "sad", "neutral", "happy", "very happy"],
+  moodLevel: {
+    type: Number,
+    min: 1,
+    max: 5,
     required: true,
+  },
+  note: {
+    type: String,
+    default: "",
   },
   date: {
     type: Date,
