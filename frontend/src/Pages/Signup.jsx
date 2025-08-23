@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserPlus, User, Mail, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
-const API_URL = import.meta.env.API_URL;
+
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const THEME = {
   primary: "#6D28D9",       // Deep purple
