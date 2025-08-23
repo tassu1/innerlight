@@ -1,39 +1,107 @@
 const MoodEntry = require("../models/MoodEntry");
 
-// @desc    Add mood for current day
+// @desc    Add or update today's mood
 // @route   POST /api/moods
 // @access  Private
-const addMood = async (req, res) => {
+const addOrUpdateMood = async (req, res) => {
   const { moodLevel, note } = req.body;
   
-  // Check for existing entry in last 24 hours
-  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const existingMood = await MoodEntry.findOne({
-    user: req.user._id,
-    date: { $gte: yesterday },
-  });
-
-  if (existingMood) {
+  // Validation
+  if (typeof moodLevel !== 'number' || moodLevel < 1 || moodLevel > 5) {
     return res.status(400).json({ 
-      message: "You can only log mood once per 24 hours",
-      existingMood // Return existing entry to show in UI
+      message: "Please provide a valid mood level (1-5)",
+      field: "moodLevel"
     });
   }
 
-  // Save new entry
   try {
-    const mood = await MoodEntry.create({
-      user: req.user._id,
-      moodLevel,
-      note,
-      date: new Date(),
+    // Find or create mood entry for today
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const mood = await MoodEntry.findOneAndUpdate(
+      {
+        user: req.user._id,
+        date: { $gte: todayStart, $lte: todayEnd }
+      },
+      {
+        moodLevel,
+        note,
+        date: new Date()
+      },
+      {
+        new: true,
+        upsert: true,
+        runValidators: true
+      }
+    );
+
+    res.status(200).json({
+      message: mood.createdAt.getTime() === mood.updatedAt.getTime() 
+        ? "Mood logged successfully" 
+        : "Mood updated successfully",
+      mood
     });
 
-    res.status(201).json(mood);
   } catch (err) {
     console.error(err);
     res.status(500).json({ 
       message: "Failed to save mood entry",
+      error: err.message 
+    });
+  }
+};
+
+// @desc    Update specific mood entry
+// @route   PATCH /api/moods/:id
+// @access  Private
+const updateMood = async (req, res) => {
+  try {
+    const { moodLevel, note } = req.body;
+
+    // Validate at least one field is provided
+    if (!moodLevel && !note) {
+      return res.status(400).json({ 
+        message: "Please provide moodLevel or note to update"
+      });
+    }
+
+    // Validate mood level range if provided
+    if (moodLevel && (moodLevel < 1 || moodLevel > 5)) {
+      return res.status(400).json({
+        message: "Mood level must be between 1-5",
+        field: "moodLevel"
+      });
+    }
+
+    const updateFields = {};
+    if (moodLevel) updateFields.moodLevel = moodLevel;
+    if (note !== undefined) updateFields.note = note;
+
+    const updatedMood = await MoodEntry.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        user: req.user._id
+      },
+      updateFields,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedMood) {
+      return res.status(404).json({ message: "Mood entry not found" });
+    }
+
+    res.json({
+      message: "Mood updated successfully",
+      mood: updatedMood
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ 
+      message: "Failed to update mood entry",
       error: err.message 
     });
   }
@@ -44,7 +112,8 @@ const addMood = async (req, res) => {
 // @access  Private
 const getMyMoods = async (req, res) => {
   try {
-    const moods = await MoodEntry.find({ user: req.user._id }).sort({ date: -1 });
+    const moods = await MoodEntry.find({ user: req.user._id })
+      .sort({ date: -1 });
     res.json(moods);
   } catch (err) {
     console.error(err);
@@ -55,37 +124,46 @@ const getMyMoods = async (req, res) => {
   }
 };
 
-// @desc    Get mood history for last 7 days
+// @desc    Get mood history for last 7 days (including empty days)
 // @route   GET /api/moods/history
 // @access  Private
-// In moodController.js
 const getMoodHistory = async (req, res) => {
   try {
+    // Get start of 7 days ago (including today = 7 days)
     const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // 6 days back + today = 7 days
+    sevenDaysAgo.setHours(0, 0, 0, 0);
 
-    // Get existing entries
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    // Get all mood entries for the last 7 days
     const moods = await MoodEntry.find({
       user: req.user._id,
-      date: { $gte: sevenDaysAgo }
+      date: { $gte: sevenDaysAgo, $lte: todayEnd }
     }).sort({ date: 1 });
 
-    // Create complete 7-day response
+    // Create complete 7-day array with default values for missing days
     const result = [];
+    
     for (let i = 0; i < 7; i++) {
-      const date = new Date(sevenDaysAgo);
-      date.setDate(date.getDate() + i);
-      const dateString = date.toISOString().split('T')[0];
+      const currentDate = new Date(sevenDaysAgo);
+      currentDate.setDate(currentDate.getDate() + i);
       
-      const existingEntry = moods.find(m => 
-        m.date.toISOString().split('T')[0] === dateString
-      );
+      const dateString = currentDate.toISOString().split('T')[0];
+      const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'short' });
+      
+      // Find if we have a mood entry for this date
+      const existingEntry = moods.find(mood => {
+        const moodDate = new Date(mood.date);
+        return moodDate.toDateString() === currentDate.toDateString();
+      });
 
       result.push({
-        date: dateString,
-        moodLevel: existingEntry?.moodLevel ?? null,
-        day: date.toLocaleDateString('en', { weekday: 'short' }),
-        fullDate: date.toISOString()
+        day: dayName,
+        mood: existingEntry ? existingEntry.moodLevel : null, // Use null for no data
+        fullDate: currentDate.toISOString(),
+        hasData: !!existingEntry
       });
     }
 
@@ -98,6 +176,7 @@ const getMoodHistory = async (req, res) => {
     });
   }
 };
+
 // @desc    Check if mood was logged today
 // @route   GET /api/moods/today
 // @access  Private
@@ -106,15 +185,18 @@ const checkTodayMood = async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
     const existingMood = await MoodEntry.findOne({
-      user: req.user._id, // Changed from id to _id for consistency
-      date: { $gte: today }
+      user: req.user._id,
+      date: { $gte: today, $lt: tomorrow }
     });
 
     res.json({ 
       logged: !!existingMood,
       mood: existingMood?.moodLevel || null,
-      existingEntry: existingMood // Return full entry if exists
+      existingEntry: existingMood
     });
   } catch (err) {
     console.error(err);
@@ -126,7 +208,8 @@ const checkTodayMood = async (req, res) => {
 };
 
 module.exports = {
-  addMood,
+  addOrUpdateMood,
+  updateMood,
   getMyMoods,
   getMoodHistory,
   checkTodayMood
