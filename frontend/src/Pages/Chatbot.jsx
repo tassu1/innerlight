@@ -30,8 +30,10 @@ const Chatbot = () => {
   const chatContainerRef = useRef(null);
   const inputRef = useRef(null);
 
-  const API_URL = 'http://localhost:5000';
-  const api = axios.create({
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+
+     const api = axios.create({
     baseURL: `${API_URL}/api/chatbot`,
     headers: { 'Content-Type': 'application/json' }
   });
@@ -41,6 +43,8 @@ const Chatbot = () => {
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   });
+
+  
 
   api.interceptors.response.use(
     response => response,
