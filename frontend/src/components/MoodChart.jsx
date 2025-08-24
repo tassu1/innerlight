@@ -11,6 +11,7 @@ import {
   Area,
   ReferenceLine
 } from 'recharts';
+import api from "../utils/api";
 
 const MoodChart = ({ theme, data }) => {
   const [chartData, setChartData] = useState([]);
@@ -57,7 +58,7 @@ const MoodChart = ({ theme, data }) => {
     const fetchMoodData = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get('/api/moods/history', {
+        const response = await api.get('/moods/history', {
           headers: {
             Authorization: `Bearer ${token}`
           }

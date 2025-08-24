@@ -1,6 +1,6 @@
 // components/NotificationBell.jsx
 import React, { useEffect, useState } from "react";
-import API from "../utils/axios";
+import api from "../utils/api";
 import NotificationDropdown from "./NotificationDropdown";
 
 const NotificationBell = () => {
@@ -9,7 +9,7 @@ const NotificationBell = () => {
 
   const fetchNotifications = async () => {
     try {
-      const { data } = await API.get("/notifications");
+      const { data } = await api.get("/notifications");
       setNotifications(data);
     } catch (error) {
       console.error("Failed to fetch notifications", error);
