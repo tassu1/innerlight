@@ -118,7 +118,7 @@ app.set("io", io);
 
 // Middleware
 app.use(cors({
-  origin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
+  origin: "https://innerlightai.vercel.app"   || "http://localhost:5173",
   credentials: true,
 }));
 app.use(express.json());
