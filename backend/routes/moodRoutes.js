@@ -1,18 +1,25 @@
 const express = require('express');
 const router = express.Router();
 const {
-  addMood,
+  addOrUpdateMood,
+  updateMood,
   getMyMoods,
   getMoodHistory,
-  checkTodayMood // Make sure this is imported
+  checkTodayMood
 } = require('../controllers/moodController');
 const { protect } = require('../middlewares/authMiddleware');
 
+// Main moods endpoint
 router.route('/')
-  .post(protect, addMood)
-  .get(protect, getMyMoods);
+  .post(protect, addOrUpdateMood) // Create or update today's mood
+  .get(protect, getMyMoods);      // Get all moods
 
-router.get('/history', protect, getMoodHistory);
-router.get('/today', protect, checkTodayMood); 
+// Specific mood entry endpoint
+router.route('/:id')
+  .patch(protect, updateMood);    // Update specific mood
 
-module.exports= router;
+// Additional mood endpoints
+router.get('/history', protect, getMoodHistory); // 7-day history
+router.get('/today', protect, checkTodayMood);   // Check today's mood
+
+module.exports = router;

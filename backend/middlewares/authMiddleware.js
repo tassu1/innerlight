@@ -31,11 +31,7 @@ const protect = async (req, res, next) => {
   try {
     console.log('Verifying token...');
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log('Decoded token:', {
-      id: decoded.id,
-      iat: new Date(decoded.iat * 1000),
-      exp: decoded.exp ? new Date(decoded.exp * 1000) : 'none'
-    });
+    
 
     if (!decoded.id) {
       console.log('Token missing id field');
@@ -45,18 +41,18 @@ const protect = async (req, res, next) => {
       });
     }
 
-    console.log('Fetching user with ID:', decoded.id);
+    
     const user = await User.findById(decoded.id).select("-password");
     
     if (!user) {
-      console.log('User not found in database');
+     
       return res.status(401).json({ 
         success: false,
         message: "User not found" 
       });
     }
 
-    console.log(`User authenticated: ${user.email}`);
+    
     req.user = user;
     next();
   } catch (error) {
