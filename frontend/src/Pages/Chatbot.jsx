@@ -3,6 +3,8 @@ import axios from 'axios';
 import { Send, Trash2, Plus, ChevronRight, Wifi, AlertCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import api from "../utils/api";
+
 const THEME = {
   primary: "#7C3AED",       // Vibrant purple
   secondary: "#1E1B4B",     // Dark indigo
@@ -30,13 +32,9 @@ const Chatbot = () => {
   const chatContainerRef = useRef(null);
   const inputRef = useRef(null);
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 
-     const api = axios.create({
-    baseURL: `${API_URL}/api/chatbot`,
-    headers: { 'Content-Type': 'application/json' }
-  });
+
 
   api.interceptors.request.use(config => {
     const token = localStorage.getItem('token');

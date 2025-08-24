@@ -10,6 +10,7 @@ import MoodChart from "../components/MoodChart";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import api from "../utils/api";
 
 const THEME = {
   primary: "#7C3AED",
@@ -35,7 +36,7 @@ const moodColors = {
   5: "#8B5CF6"
 };
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 
 const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState({
@@ -82,7 +83,7 @@ const Dashboard = () => {
       const token = localStorage.getItem("token");
       if (!token) return { name: "" };
       
-      const res = await axios.get(`${API_URL}/api/users/me`, {
+      const res = await api.get(`/users/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       return res.data.data || { name: "" };
@@ -97,7 +98,7 @@ const Dashboard = () => {
       const token = localStorage.getItem("token");
       if (!token) return;
       
-      const res = await axios.get(`${API_URL}/api/moods/today`, {
+      const res = await api.get(`/moods/today`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -221,7 +222,7 @@ const Dashboard = () => {
       // Fetch mood history for the chart
       const token = localStorage.getItem("token");
       if (token) {
-        const moodRes = await axios.get(`${API_URL}/api/moods/history`, {
+        const moodRes = await api.get(`/moods/history`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -266,8 +267,7 @@ const Dashboard = () => {
     try {
       setIsSubmitting(true);
       const token = localStorage.getItem("token");
-      await axios.post(
-        `${API_URL}/api/moods`,
+      await api.get( `/moods`,
         { 
           moodLevel,
           note: dashboardData.note || undefined 
