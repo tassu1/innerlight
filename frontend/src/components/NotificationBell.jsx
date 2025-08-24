@@ -55,6 +55,6 @@ const NotificationBell = () => {
       )}
     </div>
   );
-};
+}; 
 
 export default NotificationBell;
