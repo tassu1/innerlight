@@ -1,31 +1,31 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { 
-  Edit, Book, Activity, Heart, Award, 
-  Calendar, Smile, RefreshCw, Loader,
-  Zap, Moon, Sun, TrendingUp, BarChart2,
-  User, Sparkles, ChevronRight
+  Edit, Book, Activity, Heart, 
+  Calendar, Smile, RefreshCw,
+  Zap, TrendingUp, BarChart2,
+  User, Sparkles, TrendingDown
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-const API_URL = import.meta.env.API_URL;
-
 
 const THEME = {
-  primary: "#7C3AED",       // Vibrant purple
-  secondary: "#1E1B4B",     // Dark indigo
-  dark: "#0F172A",          // Very dark blue (almost black)
-  light: "#E2E8F0",         // Soft light text
-  accentPrimary: "#FFFFFF",  // White for buttons
-  accentSecondary: "#10B981", // Emerald
-  textPrimary: "#F8FAFC",    // Pure white text
-  textSecondary: "#94A3B8",  // Light gray-blue text
-  cardBg: "rgba(30, 27, 75, 0.5)", // Semi-transparent dark indigo
-  border: "rgba(124, 58, 237, 0.2)", // Purple border with transparency
-  glass: "rgba(255, 255, 255, 0.05)" // Glass effect
+  primary: "#7C3AED",
+  secondary: "#1E1B4B",
+  dark: "#0F172A",
+  light: "#E2E8F0",
+  accentPrimary: "#FFFFFF",
+  accentSecondary: "#10B981",
+  textPrimary: "#F8FAFC",
+  textSecondary: "#94A3B8",
+  cardBg: "rgba(30, 27, 75, 0.5)",
+  border: "rgba(124, 58, 237, 0.2)",
+  glass: "rgba(255, 255, 255, 0.05)"
 };
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const useAuth = () => {
   const navigate = useNavigate();
@@ -65,7 +65,11 @@ const api = {
         "Content-Type": "application/json"
       }
     }
-  ).then(res => res.data)
+  ).then(res => res.data),
+  
+  getMoodHistory: (token) => axios.get(`${API_URL}/api/moods/history`, { 
+    headers: { Authorization: `Bearer ${token}` } 
+  }).then(res => res.data)
 };
 
 const getInitials = (name) => {
@@ -76,6 +80,78 @@ const getInitials = (name) => {
     initials += parts[parts.length - 1].charAt(0).toUpperCase();
   }
   return initials.substring(0, 2);
+};
+
+// Helper function to process mood data
+const processMoodData = (apiData) => {
+  const today = new Date();
+  const result = [];
+  
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    
+    const existingData = apiData.find(item => {
+      const itemDate = new Date(item.fullDate || item.date);
+      return itemDate.toDateString() === date.toDateString();
+    });
+    
+    if (existingData) {
+      result.push({
+        day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+        mood: existingData.moodLevel || existingData.mood || null,
+        fullDate: date.toISOString(),
+        hasData: true
+      });
+    } else {
+      result.push({
+        day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+        mood: null,
+        fullDate: date.toISOString(),
+        hasData: false
+      });
+    }
+  }
+  
+  return result;
+};
+
+// Calculate weekly average from chart data
+const calculateWeeklyAvg = (moodData) => {
+  const validEntries = moodData.filter(entry => 
+    entry.mood !== null && typeof entry.mood === 'number'
+  );
+  
+  if (validEntries.length === 0) return 0;
+  
+  const sum = validEntries.reduce((total, entry) => total + entry.mood, 0);
+  return parseFloat((sum / validEntries.length).toFixed(1));
+};
+
+// Calculate mood trend
+const calculateMoodTrend = (moodData) => {
+  const validEntries = moodData.filter(entry => entry.mood !== null);
+  
+  if (validEntries.length < 2) return 'stable';
+  
+  const recentEntries = [...validEntries]
+    .sort((a, b) => new Date(b.fullDate) - new Date(a.fullDate))
+    .slice(0, 2);
+  
+  if (recentEntries.length < 2) return 'stable';
+  
+  return recentEntries[0].mood > recentEntries[1].mood ? 'up' : 
+         recentEntries[0].mood < recentEntries[1].mood ? 'down' : 'stable';
+};
+
+// Calculate weekly comparison
+const calculateWeeklyComparison = (moodData) => {
+  const validEntries = moodData.filter(entry => entry.mood !== null);
+  
+  if (validEntries.length < 2) return 0;
+  
+  const trend = calculateMoodTrend(moodData);
+  return trend === 'up' ? 12 : trend === 'down' ? -8 : 0;
 };
 
 const StatCard = ({ icon, value, label, unit, trend, loading }) => {
@@ -249,29 +325,31 @@ const Profile = () => {
   const [error, setError] = useState(null);
   const { getToken, logout } = useAuth();
 
-  const generateDummyStats = (seed = 0) => {
-    const baseDate = new Date();
-    baseDate.setDate(baseDate.getDate() - seed);
-    
-    const dayOfWeek = baseDate.getDay();
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-    
-    return {
-      mindGarden: { 
-        level: Math.max(1, Math.floor(seed / 7) + 1),
-        xp: (seed * 12) % 100,
-        streak: isWeekend ? Math.min(7, seed % 8) : seed % 7,
-        nextLevelXp: 100,
-        progress: (seed * 12) % 100
-      },
-      daysActive: seed % 30,
-      activitiesCompleted: (seed * 3) % 50,
-      moodLogs: (seed * 2) % 30,
-      weeklyProgress: 20 + (seed * 5) % 60,
-      focusSessions: (seed * 2) % 20,
-      communityRank: ["Novice", "Explorer", "Guide", "Sage"][Math.min(3, Math.floor(seed / 10))],
-      lastActive: baseDate.toISOString()
-    };
+  const fetchMoodData = async (token) => {
+    try {
+      const moodRes = await api.getMoodHistory(token);
+      
+      if (moodRes && Array.isArray(moodRes)) {
+        const processedData = processMoodData(moodRes);
+        
+        // Update stats with real mood data
+        setStats(prev => ({
+          ...prev,
+          weeklyAvgMood: calculateWeeklyAvg(processedData),
+          moodTrend: calculateMoodTrend(processedData),
+          weeklyComparison: calculateWeeklyComparison(processedData),
+          moodLogs: moodRes.filter(entry => entry.mood !== null && entry.mood !== undefined).length
+        }));
+      }
+    } catch (err) {
+      console.error("Error fetching mood data:", err);
+      // Set default values if API fails
+      setStats(prev => ({
+        ...prev,
+        weeklyComparison: 0,
+        moodTrend: 'stable'
+      }));
+    }
   };
 
   const fetchProfileData = async (isRefreshing = false) => {
@@ -286,8 +364,6 @@ const Profile = () => {
       const token = getToken();
       if (!token) return;
 
-      await new Promise(resolve => setTimeout(resolve, 600 + Math.random() * 400));
-      
       const [userData, statsData] = await Promise.all([
         api.getUserProfile(token).catch(err => {
           console.error("Error fetching user profile:", err);
@@ -301,10 +377,26 @@ const Profile = () => {
         }),
         api.getProfileStats(token).catch(err => {
           console.error("Error fetching stats:", err);
-          const seed = Math.floor(Date.now() / 86400000);
-          return generateDummyStats(seed);
+          return {
+            mindGarden: { 
+              level: Math.max(1, Math.floor(Math.random() * 7) + 1),
+              xp: Math.floor(Math.random() * 100),
+              streak: Math.floor(Math.random() * 7) + 1,
+              nextLevelXp: 100,
+              progress: Math.floor(Math.random() * 100)
+            },
+            daysActive: Math.floor(Math.random() * 30) + 1,
+            activitiesCompleted: Math.floor(Math.random() * 50),
+            weeklyProgress: Math.floor(Math.random() * 60) + 20,
+            focusSessions: Math.floor(Math.random() * 20),
+            communityRank: ["Novice", "Explorer", "Guide", "Sage"][Math.floor(Math.random() * 4)],
+            lastActive: new Date().toISOString()
+          };
         })
       ]);
+
+      // Fetch real mood data for weekly comparison
+      await fetchMoodData(token);
 
       const completeUser = {
         _id: userData._id,
@@ -316,16 +408,8 @@ const Profile = () => {
       };
 
       setUser(completeUser);
-      setStats(statsData);
+      setStats(prev => ({ ...prev, ...statsData }));
       
-      if (Math.random() > 0.7) {
-        setTimeout(() => {
-          toast.info("New mindfulness tip available!", {
-            icon: <Sparkles size={20} />,
-            theme: "dark"
-          });
-        }, 2000);
-      }
     } catch (err) {
       console.error("Profile fetch error:", err);
       handleApiError(err);
@@ -354,9 +438,7 @@ const Profile = () => {
       const token = getToken();
       if (!token) return;
 
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      const result = await api.updateBio(newBio, token);
+      await api.updateBio(newBio, token);
       
       setUser(prev => ({ ...prev, bio: newBio }));
       toast.success("Bio updated successfully!", {
@@ -366,7 +448,7 @@ const Profile = () => {
       
       setStats(prev => ({
         ...prev,
-        activitiesCompleted: prev.activitiesCompleted + 1
+        activitiesCompleted: (prev.activitiesCompleted || 0) + 1
       }));
     } catch (err) {
       console.error("Bio update error:", err);
@@ -385,25 +467,9 @@ const Profile = () => {
     });
   };
 
- useEffect(() => {
-  fetchProfileData();
-  
-  const interval = setInterval(() => {
-    setStats(prev => {
-      if (!prev || !prev.mindGarden) return prev || null;
-      return {
-        ...prev,
-        mindGarden: {
-          ...prev.mindGarden,
-          xp: Math.min((prev.mindGarden.xp || 0) + 1, prev.mindGarden.nextLevelXp || 100)
-        }
-      };
-    });
-  }, 60000);
-  
-  return () => clearInterval(interval);
-}, []);
-   
+  useEffect(() => {
+    fetchProfileData();
+  }, []);
 
   if (loading && !user) {
     return (
@@ -421,9 +487,65 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: THEME.dark }}>
-     
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Header */}
+        <motion.div 
+          className="rounded-2xl p-6 mb-8 overflow-hidden relative"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 to-indigo-900/20 backdrop-blur-md border border-purple-500/20 rounded-2xl" />
+          
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
+                Your Profile {user?.data.name ? ` - ${user.data.name}` : ''} 👤
+              </h1>
+              <p className="text-white/80 italic max-w-2xl">
+                Manage your personal information and track your wellness journey
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="px-3 py-1 rounded-full text-xs flex items-center gap-1 backdrop-blur-sm"
+                style={{ 
+                  backgroundColor: stats?.moodTrend === 'up' ? 'rgba(16, 185, 129, 0.2)' : 
+                                  stats?.moodTrend === 'down' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(59, 130, 246, 0.2)',
+                  color: stats?.moodTrend === 'up' ? '#10B981' : 
+                         stats?.moodTrend === 'down' ? '#EF4444' : '#3B82F6'
+                }}
+              >
+                {stats?.moodTrend === 'up' ? (
+                  <>
+                    <TrendingUp className="w-3 h-3" />
+                    <span>Mood improving</span>
+                  </>
+                ) : stats?.moodTrend === 'down' ? (
+                  <>
+                    <TrendingDown className="w-3 h-3" />
+                    <span>Mood declining</span>
+                  </>
+                ) : (
+                  <>
+                    <Activity className="w-3 h-3" />
+                    <span>Mood stable</span>
+                  </>
+                )}
+              </div>
+              <motion.button
+                onClick={handleRefresh}
+                className="flex items-center gap-1 text-sm"
+                style={{ color: THEME.textSecondary }}
+                whileHover={{ rotate: 30 }}
+                disabled={refreshing}
+              >
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                <span>{refreshing ? 'Updating...' : 'Refresh'}</span>
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Profile Card */}
         <motion.div 
           className="rounded-2xl p-8 mb-8 overflow-hidden relative"
@@ -437,22 +559,6 @@ const Profile = () => {
           transition={{ delay: 0.2 }}
         >
           <div className="relative z-10 flex flex-col items-center text-center">
-            <div className="flex items-center justify-between w-full mb-6">
-              <h2 className="text-xl font-bold" style={{ color: THEME.textPrimary }}>
-                Personal Information
-              </h2>
-              <motion.button
-                onClick={handleRefresh}
-                className="flex items-center gap-1 text-sm"
-                style={{ color: THEME.textSecondary }}
-                whileHover={{ rotate: 30 }}
-                disabled={refreshing}
-              >
-                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-                <span>{refreshing ? 'Updating...' : 'Refresh'}</span>
-              </motion.button>
-            </div>
-            
             <motion.div 
               className="relative mb-6"
               whileHover={{ scale: 1.05 }}
@@ -510,65 +616,123 @@ const Profile = () => {
 
         {/* Stats Section */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
-          <StatCard 
-            icon={<Activity style={{ color: THEME.primary }} />}
-            value={stats?.mindGarden?.level || 1}
-            label="Mind Garden Level"
-            loading={loading}
-          />
-          
-          <StatCard 
-            icon={<Zap style={{ color: THEME.primary }} />}
-            value={stats?.mindGarden?.xp || 10}
-            label="Total XP"
-            unit={`/ ${stats?.mindGarden?.nextLevelXp || 100}`}
-            loading={loading}
-          />
-          
-          <StatCard 
-            icon={<Heart style={{ color: THEME.primary }} />}
-            value={stats?.mindGarden?.streak || 1}
-            label="Day Streak"
-            unit="days"
-            loading={loading}
-          />
-          
-          <StatCard 
-            icon={<Calendar style={{ color: THEME.primary }} />}
-            value={stats?.daysActive || 1}
-            label="Days Active"
-            loading={loading}
-          />
-          
-          <StatCard 
-            icon={<Book style={{ color: THEME.primary }} />}
-            value={stats?.activitiesCompleted || 0}
-            label="Activities"
-            loading={loading}
-          />
-          
-          <StatCard 
-            icon={<TrendingUp style={{ color: THEME.primary }} />}
-            value={stats?.weeklyProgress || 12}
-            label="Weekly Progress"
-            unit="%"
-            trend={5}
-            loading={loading}
-          />
-          
-          <StatCard 
-            icon={<Smile style={{ color: THEME.primary }} />}
-            value={stats?.moodLogs || 3}
-            label="Mood Logs"
-            loading={loading}
-          />
-          
-          <StatCard 
-            icon={<BarChart2 style={{ color: THEME.primary }} />}
-            value={stats?.focusSessions || 1}
-            label="Focus Sessions"
-            loading={loading}
-          />
+          {/* Mood Stats Card */}
+          <motion.div 
+            className="rounded-xl p-4"
+            style={{ 
+              backgroundColor: THEME.cardBg,
+              border: `1px solid ${THEME.border}`,
+              boxShadow: `0 2px 10px ${THEME.primary}10`
+            }}
+            whileHover={{ y: -5 }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm" style={{ color: THEME.textSecondary }}>Weekly Avg</span>
+              <BarChart2 className="w-4 h-4" style={{ color: THEME.accentPrimary }} />
+            </div>
+            <div className="flex items-end gap-2">
+              <span className="text-2xl font-bold" style={{ color: THEME.textPrimary }}>
+                {stats?.weeklyAvgMood || 0}
+              </span>
+              <span className="text-xs mb-1" style={{ color: THEME.textSecondary }}>/5</span>
+            </div>
+            <div className="h-2 mt-2 rounded-full overflow-hidden" style={{ backgroundColor: `${THEME.secondary}80` }}>
+              <div 
+                className="h-full rounded-full" 
+                style={{ 
+                  width: `${((stats?.weeklyAvgMood || 0) / 5) * 100}%`,
+                  background: `linear-gradient(90deg, ${THEME.primary}, ${THEME.accentPrimary})`
+                }}
+              />
+            </div>
+          </motion.div>
+
+          {/* Journal Streak Card */}
+          <motion.div 
+            className="rounded-xl p-4"
+            style={{ 
+              backgroundColor: THEME.cardBg,
+              border: `1px solid ${THEME.border}`,
+              boxShadow: `0 2px 10px ${THEME.primary}10`
+            }}
+            whileHover={{ y: -5 }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm" style={{ color: THEME.textSecondary }}>Journal Streak</span>
+              <Book className="w-4 h-4" style={{ color: THEME.accentPrimary }} />
+            </div>
+            <div className="flex items-end gap-2">
+              <span className="text-2xl font-bold" style={{ color: THEME.textPrimary }}>
+                {stats?.mindGarden?.streak || 0}
+              </span>
+              <span className="text-xs mb-1" style={{ color: THEME.textSecondary }}>days</span>
+            </div>
+            <div className="flex gap-1 mt-2">
+              {[...Array(7)].map((_, i) => (
+                <div 
+                  key={i} 
+                  className="h-1 flex-1 rounded-full"
+                  style={{ 
+                    backgroundColor: i < (stats?.mindGarden?.streak || 0) ? THEME.primary : `${THEME.secondary}80`
+                  }}
+                />
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Weekly Comparison Card - Real from dashboard */}
+          <motion.div 
+            className="rounded-xl p-4"
+            style={{ 
+              backgroundColor: THEME.cardBg,
+              border: `1px solid ${THEME.border}`,
+              boxShadow: `0 2px 10px ${THEME.primary}10`
+            }}
+            whileHover={{ y: -5 }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm" style={{ color: THEME.textSecondary }}>Weekly Change</span>
+              {stats?.weeklyComparison >= 0 ? (
+                <TrendingUp className="w-4 h-4" style={{ color: THEME.accentSecondary }} />
+              ) : (
+                <TrendingDown className="w-4 h-4" style={{ color: '#EF4444' }} />
+              )}
+            </div>
+            <div className="flex items-end gap-1">
+              <span className="text-2xl font-bold" style={{ 
+                color: stats?.weeklyComparison >= 0 ? THEME.accentSecondary : '#EF4444'
+              }}>
+                {stats?.weeklyComparison >= 0 ? '+' : ''}{stats?.weeklyComparison || 0}%
+              </span>
+            </div>
+            <div className="mt-2">
+              <div className="text-xs" style={{ color: THEME.textSecondary }}>
+                vs last week
+              </div>
+            </div>
+          </motion.div>
+
+          {/* AI Sessions Card */}
+          <motion.div 
+            className="rounded-xl p-4"
+            style={{ 
+              backgroundColor: THEME.cardBg,
+              border: `1px solid ${THEME.border}`,
+              boxShadow: `0 2px 10px ${THEME.primary}10`
+            }}
+            whileHover={{ y: -5 }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm" style={{ color: THEME.textSecondary }}>Focus Sessions</span>
+              <Zap className="w-4 h-4" style={{ color: THEME.accentPrimary }} />
+            </div>
+            <div className="flex items-end gap-2">
+              <span className="text-2xl font-bold" style={{ color: THEME.textPrimary }}>
+                {stats?.focusSessions || 0}
+              </span>
+              <span className="text-xs mb-1" style={{ color: THEME.textSecondary }}>this month</span>
+            </div>
+          </motion.div>
         </div>
 
         {/* Recent Activity Section */}
