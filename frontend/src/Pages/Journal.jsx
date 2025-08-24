@@ -25,7 +25,7 @@ import {
   Sunset,
   ArrowLeft
 } from "lucide-react";
-const API_URL = import.meta.env.API_URL;
+
 
 const THEME = {
   primary: "#6D28D9",       // Vibrant purple
@@ -41,6 +41,9 @@ const THEME = {
   paper: "rgba(249, 250, 251, 0.9)", // For text content
   error: "#EF4444"          // Red for errors
 };
+
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const formatDate = (iso) => {
   if (!iso) return "";

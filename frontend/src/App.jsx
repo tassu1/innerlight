@@ -8,7 +8,6 @@ import SelfHelp from "./Pages/SelfHelp";
 import Journal from "./Pages/Journal";
 import Chatbot from "./Pages/Chatbot";
 import Profile from "./components/Profile";
-import CommunityForum from "./Pages/CommunityForum";
 import OtherUserProfile from "./Pages/OtherUserProfile";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -27,11 +26,21 @@ const AuthRedirect = () => {
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
-  // Check auth status on app load
+  // Check auth status and load user data on app load
   useEffect(() => {
     const token = localStorage.getItem("token");
-    setIsAuthenticated(!!token);
+    const userData = localStorage.getItem("user");
+    
+    if (token && userData) {
+      setIsAuthenticated(true);
+      try {
+        setCurrentUser(JSON.parse(userData));
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+      }
+    }
   }, []);
 
   return (
@@ -40,8 +49,8 @@ function App() {
         {/* Fixed Navbar */}
         <Navbar isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
         
-        {/* Main Content - starts below navbar */}
-        <main className="main-content flex-grow "> {/* pt-16 matches navbar height */}
+        {/* Main Content */}
+        <main className="main-content flex-grow">
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
@@ -57,14 +66,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/community"
-              element={
-                <ProtectedRoute>
-                  <CommunityForum />
-                </ProtectedRoute>
-              }
-            />
+           
             <Route
               path="/profile"
               element={

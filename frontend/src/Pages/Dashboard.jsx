@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+
+import  { useEffect, useState } from "react";
 import { 
   Smile, Frown, Meh, Laugh, Heart, 
   BarChart2, BookOpen, MessageSquare,
@@ -11,26 +12,30 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
 const THEME = {
-  primary: "#7C3AED",       // Vibrant purple
-  secondary: "#1E1B4B",     // Dark indigo
-  dark: "#0F172A",          // Very dark blue (almost black)
-  light: "#E2E8F0",         // Soft light text
-  accentPrimary: "#FFFFFF",  // White for buttons
-  accentSecondary: "#10B981", // Emerald
-  textPrimary: "#F8FAFC",    // Pure white text
-  textSecondary: "#94A3B8",  // Light gray-blue text
-  cardBg: "rgba(30, 27, 75, 0.5)", // Semi-transparent dark indigo
-  border: "rgba(124, 58, 237, 0.2)", // Purple border with transparency
-  glass: "rgba(255, 255, 255, 0.05)" // Glass effect
+  primary: "#7C3AED",
+  secondary: "#1E1B4B",
+  dark: "#0F172A",
+  light: "#E2E8F0",
+  accentPrimary: "#FFFFFF",
+  accentSecondary: "#10B981",
+  textPrimary: "#F8FAFC",
+  textSecondary: "#94A3B8",
+  cardBg: "rgba(30, 27, 75, 0.5)",
+  border: "rgba(124, 58, 237, 0.2)",
+  glass: "rgba(255, 255, 255, 0.05)"
 };
 
+
+
 const moodColors = {
-  1: "#EF4444", // Red
-  2: "#F59E0B", // Amber
-  3: "#3B82F6", // Blue
-  4: "#10B981", // Emerald
-  5: "#8B5CF6"  // Violet
+  1: "#EF4444",
+  2: "#F59E0B",
+  3: "#3B82F6",
+  4: "#10B981",
+  5: "#8B5CF6"
 };
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState({
@@ -43,16 +48,26 @@ const Dashboard = () => {
     stats: {
       moodTrend: 'up',
       journalStreak: 0,
-      weeklyAvgMood: 0,
-      moodDistribution: [20, 30, 50, 40, 10],
+      weeklyAvgMood: 3.5,
       weeklyComparison: 12,
-      aiSessions: 0
+      aiSessions: 0,
+      moodChartData: Array(7).fill().map((_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - (6 - i));
+        return {
+          day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+          mood: null,
+          fullDate: date.toISOString(),
+          hasData: false
+        };
+      })
     },
     userName: ""
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showMoodForm, setShowMoodForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const chatStarters = [
@@ -65,56 +80,172 @@ const Dashboard = () => {
   const fetchUserData = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/users/me", {
+      if (!token) return { name: "" };
+      
+      const res = await axios.get(`${API_URL}/api/users/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      return res.data.data;
+      return res.data.data || { name: "" };
     } catch (err) {
       console.error("Error fetching user data:", err);
-      return { name: "" }; // Return empty name instead of "Friend"
+      return { name: "" };
     }
+  };
+
+  const checkTodayMood = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      
+      const res = await axios.get(`${API_URL}/api/moods/today`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (res.data?.logged) {
+        setDashboardData(prev => ({
+          ...prev,
+          alreadyLogged: true,
+          moodLevel: res.data.mood?.toString() || "",
+          note: res.data.existingEntry?.note || ""
+        }));
+      }
+    } catch (err) {
+      console.error("Error checking today's mood:", err);
+    }
+  };
+
+  // Helper function to process mood data
+  const processMoodData = (apiData) => {
+    const today = new Date();
+    const result = [];
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      
+      const existingData = apiData.find(item => {
+        const itemDate = new Date(item.fullDate || item.date);
+        return itemDate.toDateString() === date.toDateString();
+      });
+      
+      if (existingData) {
+        result.push({
+          day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+          mood: existingData.moodLevel || existingData.mood || null,
+          fullDate: date.toISOString(),
+          hasData: true
+        });
+      } else {
+        result.push({
+          day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+          mood: null,
+          fullDate: date.toISOString(),
+          hasData: false
+        });
+      }
+    }
+    
+    return result;
+  };
+
+  // Calculate weekly average from chart data
+  const calculateWeeklyAvg = (moodData) => {
+    const validEntries = moodData.filter(entry => 
+      entry.mood !== null && typeof entry.mood === 'number'
+    );
+    
+    if (validEntries.length === 0) return 0;
+    
+    const sum = validEntries.reduce((total, entry) => total + entry.mood, 0);
+    return parseFloat((sum / validEntries.length).toFixed(1));
+  };
+
+  // Calculate mood trend
+  const calculateMoodTrend = (moodData) => {
+    // Filter out days with no data
+    const validEntries = moodData.filter(entry => entry.mood !== null);
+    
+    if (validEntries.length < 2) return 'stable';
+    
+    // Get the two most recent entries with data
+    const recentEntries = [...validEntries]
+      .sort((a, b) => new Date(b.fullDate) - new Date(a.fullDate))
+      .slice(0, 2);
+    
+    if (recentEntries.length < 2) return 'stable';
+    
+    return recentEntries[0].mood > recentEntries[1].mood ? 'up' : 
+           recentEntries[0].mood < recentEntries[1].mood ? 'down' : 'stable';
+  };
+
+  // Calculate weekly comparison
+  const calculateWeeklyComparison = (moodData) => {
+    // This is a simplified version - you might want to compare with last week's data
+    // For now, we'll return a static value or calculate based on trend
+    const validEntries = moodData.filter(entry => entry.mood !== null);
+    
+    if (validEntries.length < 2) return 0;
+    
+    // Simple calculation: if trend is up, positive percentage, if down, negative
+    const trend = calculateMoodTrend(moodData);
+    return trend === 'up' ? 12 : trend === 'down' ? -8 : 0;
+  };
+
+  // Calculate mood distribution
+  const calculateMoodDistribution = (moodData) => {
+    const distribution = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
+    const validEntries = moodData.filter(entry => entry.mood !== null);
+    
+    if (validEntries.length === 0) return distribution;
+    
+    validEntries.forEach(entry => {
+      if (entry.mood >= 1 && entry.mood <= 5) {
+        distribution[entry.mood]++;
+      }
+    });
+    
+    // Convert to percentages
+    Object.keys(distribution).forEach(level => {
+      distribution[level] = Math.round((distribution[level] / validEntries.length) * 100);
+    });
+    
+    return distribution;
   };
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
       const userData = await fetchUserData();
+      await checkTodayMood();
       
-      try {
-        const [quoteRes, chatsRes, statsRes, todayMoodRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/quotes/random"),
-          axios.get("http://localhost:5000/api/chatbot/history", { 
-            headers: { Authorization: `Bearer ${token}` } 
-          }).catch(() => ({ data: [] })),
-          axios.get("http://localhost:5000/api/stats", { 
-            headers: { Authorization: `Bearer ${token}` } 
-          }).catch(() => ({ data: {} })),
-          axios.get("http://localhost:5000/api/moods/today", { 
-            headers: { Authorization: `Bearer ${token}` } 
-          }).catch(() => ({ data: {} }))
-        ]);
-
-        setDashboardData({
-          userName: userData.name || "", // Use empty string if name not available
-          quote: `${quoteRes.data.q} — ${quoteRes.data.a}`,
-          activeChats: chatsRes.data.slice(0, 2),
-          stats: {
-            ...dashboardData.stats,
-            ...statsRes.data
-          },
-          alreadyLogged: todayMoodRes.data?.logged || false,
-          moodLevel: todayMoodRes.data?.mood?.toString() || "",
-          aiTip: dashboardData.aiTip
+      // Fetch mood history for the chart
+      const token = localStorage.getItem("token");
+      if (token) {
+        const moodRes = await axios.get(`${API_URL}/api/moods/history`, {
+          headers: { Authorization: `Bearer ${token}` }
         });
-
-      } catch (err) {
-        console.error("Partial dashboard data error:", err);
-        setDashboardData(prev => ({
-          ...prev,
-          userName: userData.name || ""
-        }));
+        
+        if (moodRes.data && Array.isArray(moodRes.data)) {
+          // Process the data to ensure we have exactly 7 days
+          const processedData = processMoodData(moodRes.data);
+          
+          setDashboardData(prev => ({
+            ...prev,
+            stats: {
+              ...prev.stats,
+              moodChartData: processedData,
+              weeklyAvgMood: calculateWeeklyAvg(processedData),
+              moodTrend: calculateMoodTrend(processedData),
+              weeklyComparison: calculateWeeklyComparison(processedData)
+            }
+          }));
+        }
       }
+
+      setDashboardData(prev => ({
+        ...prev,
+        userName: userData.name || "",
+      }));
 
     } catch (err) {
       console.error("Dashboard initialization error:", err);
@@ -124,32 +255,90 @@ const Dashboard = () => {
     }
   };
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
   const handleMoodSubmit = async (e) => {
     e.preventDefault();
-    if (!dashboardData.moodLevel) return setError("Please select your mood.");
     
+    const moodLevel = parseInt(dashboardData.moodLevel);
+    if (isNaN(moodLevel) || moodLevel < 1 || moodLevel > 5) {
+      return setError("Please select a valid mood (1-5)");
+    }
+
     try {
+      setIsSubmitting(true);
+      const token = localStorage.getItem("token");
       await axios.post(
-        "http://localhost:5000/api/moods",
-        { moodLevel: dashboardData.moodLevel, note: dashboardData.note },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+        `${API_URL}/api/moods`,
+        { 
+          moodLevel,
+          note: dashboardData.note || undefined 
+        },
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      // Update UI with new mood data
+      const newMoodData = {
+        day: new Date().toLocaleDateString('en-US', { weekday: 'short' }),
+        mood: moodLevel,
+        fullDate: new Date().toISOString(),
+        hasData: true
+      };
+      
+      setDashboardData(prev => {
+        const newChartData = updateChartData(prev.stats.moodChartData, [newMoodData]);
+        return {
+          ...prev,
+          alreadyLogged: true,
+          note: "",
+          moodLevel: "",
+          stats: {
+            ...prev.stats,
+            moodChartData: newChartData,
+            weeklyAvgMood: calculateWeeklyAvg(newChartData),
+            moodTrend: calculateMoodTrend(newChartData),
+            weeklyComparison: calculateWeeklyComparison(newChartData)
+          }
+        };
+      });
+      
+      setShowMoodForm(false);
+      setError("");
+    } catch (err) {
+      console.error("Mood submission error:", err);
+      setError(err.response?.data?.message || "Failed to save mood");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Helper function to update chart data
+  const updateChartData = (currentData, newData) => {
+    const updatedData = [...currentData];
+    
+    newData.forEach(newEntry => {
+      const existingIndex = updatedData.findIndex(
+        entry => new Date(entry.fullDate).toDateString() === new Date(newEntry.fullDate).toDateString()
       );
       
-      setDashboardData(prev => ({
-        ...prev,
-        alreadyLogged: true,
-        note: "",
-        moodLevel: ""
-      }));
-      setShowMoodForm(false);
-      fetchDashboardData();
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to log mood.");
-    }
+      if (existingIndex >= 0) {
+        updatedData[existingIndex] = newEntry;
+      } else {
+        // Replace the oldest entry if we have a full week
+        if (updatedData.length >= 7) {
+          updatedData.shift(); // Remove oldest
+        }
+        updatedData.push(newEntry);
+      }
+    });
+
+    // Sort by date (newest first)
+    return updatedData.sort((a, b) => 
+      new Date(b.fullDate) - new Date(a.fullDate)
+    ).slice(0, 7); // Ensure only 7 days
   };
 
   const moodIcons = {
@@ -159,6 +348,10 @@ const Dashboard = () => {
     4: <Laugh className="w-6 h-6" style={{ color: moodColors[4] }} />,
     5: <Heart className="w-6 h-6" style={{ color: moodColors[5] }} />
   };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
   if (loading) {
     return (
@@ -171,6 +364,9 @@ const Dashboard = () => {
     );
   }
 
+  // Calculate mood distribution for display
+  const moodDistribution = calculateMoodDistribution(dashboardData.stats.moodChartData);
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: THEME.dark }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -181,10 +377,8 @@ const Dashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          {/* Glass background */}
           <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 to-indigo-900/20 backdrop-blur-md border border-purple-500/20 rounded-2xl" />
           
-          {/* Content */}
           <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
@@ -197,8 +391,10 @@ const Dashboard = () => {
             <div className="flex items-center gap-2">
               <div className="px-3 py-1 rounded-full text-xs flex items-center gap-1 backdrop-blur-sm"
                 style={{ 
-                  backgroundColor: dashboardData.stats.moodTrend === 'up' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                  color: dashboardData.stats.moodTrend === 'up' ? '#10B981' : '#EF4444'
+                  backgroundColor: dashboardData.stats.moodTrend === 'up' ? 'rgba(16, 185, 129, 0.2)' : 
+                                  dashboardData.stats.moodTrend === 'down' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(59, 130, 246, 0.2)',
+                  color: dashboardData.stats.moodTrend === 'up' ? '#10B981' : 
+                         dashboardData.stats.moodTrend === 'down' ? '#EF4444' : '#3B82F6'
                 }}
               >
                 {dashboardData.stats.moodTrend === 'up' ? (
@@ -206,10 +402,15 @@ const Dashboard = () => {
                     <TrendingUp className="w-3 h-3" />
                     <span>Mood improving</span>
                   </>
-                ) : (
+                ) : dashboardData.stats.moodTrend === 'down' ? (
                   <>
                     <TrendingDown className="w-3 h-3" />
                     <span>Mood declining</span>
+                  </>
+                ) : (
+                  <>
+                    <Activity className="w-3 h-3" />
+                    <span>Mood stable</span>
                   </>
                 )}
               </div>
@@ -235,7 +436,7 @@ const Dashboard = () => {
             </div>
             <div className="flex items-end gap-2">
               <span className="text-2xl font-bold" style={{ color: THEME.textPrimary }}>
-                {dashboardData.stats.weeklyAvgMood.toFixed(1)}
+                {dashboardData.stats.weeklyAvgMood}
               </span>
               <span className="text-xs mb-1" style={{ color: THEME.textSecondary }}>/5</span>
             </div>
@@ -396,7 +597,7 @@ const Dashboard = () => {
                       onClick={() => setShowMoodForm(true)}
                       className="w-full py-3 rounded-lg font-medium flex items-center justify-center gap-2"
                       style={{ 
-                       background: `linear-gradient(135deg, ${THEME.accentPrimary} 0%, #E2E8F0 100%)`,
+                        background: `linear-gradient(135deg, ${THEME.accentPrimary} 0%, #E2E8F0 100%)`,
                         color: THEME.secondary,
                         boxShadow: `0 2px 10px ${THEME.primary}30`
                       }}
@@ -420,7 +621,10 @@ const Dashboard = () => {
                               transform: dashboardData.moodLevel === level.toString() ? 'scale(1.1)' : 'scale(1)',
                               opacity: dashboardData.moodLevel === level.toString() ? 1 : 0.7
                             }}
-                            onClick={() => setDashboardData(prev => ({ ...prev, moodLevel: level.toString() }))}
+                            onClick={() => setDashboardData(prev => ({ 
+                              ...prev, 
+                              moodLevel: level.toString() 
+                            }))}
                             whileHover={{ scale: 1.1 }}
                           >
                             {moodIcons[level]}
@@ -448,7 +652,8 @@ const Dashboard = () => {
                       <div className="flex gap-2">
                         <motion.button
                           type="submit"
-                          className="flex-1 py-2 px-4 rounded-lg font-medium"
+                          disabled={isSubmitting}
+                          className="flex-1 py-2 px-4 rounded-lg font-medium disabled:opacity-70"
                           style={{ 
                             background: `linear-gradient(135deg, ${THEME.accentPrimary} 0%, #E2E8F0 100%)`,
                             color: THEME.secondary,
@@ -457,7 +662,7 @@ const Dashboard = () => {
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                         >
-                          Submit
+                          {isSubmitting ? "Saving..." : "Submit"}
                         </motion.button>
                         <motion.button
                           type="button"
@@ -505,13 +710,13 @@ const Dashboard = () => {
                     <div className="flex-1">
                       <div className="flex justify-between text-xs mb-1" style={{ color: THEME.textPrimary }}>
                         <span>Level {level}</span>
-                        <span>{dashboardData.stats.moodDistribution[level-1] || 0}%</span>
+                        <span>{moodDistribution[level]}%</span>
                       </div>
                       <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: `${THEME.secondary}80` }}>
                         <div 
                           className="h-full rounded-full" 
                           style={{ 
-                            width: `${dashboardData.stats.moodDistribution[level-1] || 0}%`,
+                            width: `${moodDistribution[level]}%`,
                             backgroundColor: moodColors[level]
                           }}
                         />
@@ -558,9 +763,9 @@ const Dashboard = () => {
             </div>
             <div className="h-64 sm:h-80">
               <MoodChart 
-                key={Date.now()} 
                 theme={THEME} 
-                data={dashboardData.stats.moodChartData || []}
+                data={dashboardData.stats.moodChartData}
+                isStatic={false}
               />
             </div>
           </motion.div>
@@ -586,7 +791,19 @@ const Dashboard = () => {
                 Daily Wellness Tip
               </h2>
               <button 
-                onClick={fetchDashboardData}
+                onClick={() => {
+                  const tips = [
+                    "Take 10 minutes to breathe deeply today 💗",
+                    "Write down three things you're grateful for",
+                    "Go for a 15-minute walk outside",
+                    "Try a 5-minute meditation session",
+                    "Drink a glass of water when you wake up"
+                  ];
+                  setDashboardData(prev => ({
+                    ...prev,
+                    aiTip: tips[Math.floor(Math.random() * tips.length)]
+                  }));
+                }}
                 className="text-xs flex items-center gap-1"
                 style={{ color: THEME.textSecondary }}
               >
@@ -657,10 +874,10 @@ const Dashboard = () => {
                         )}
                       </div>
                       <span className="font-medium text-sm" style={{ color: THEME.textPrimary }}>
-                        {chat.isAI ? "InnerLight AI" : chat.participants?.find(p => p._id !== localStorage.getItem("userId"))?.name || "Chat"}
+                        {chat.isAI ? "InnerLight AI" : "Chat"}
                       </span>
                       <span className="text-xs" style={{ color: THEME.textSecondary }}>
-                        {new Date(chat.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                     <p className="text-sm line-clamp-2" style={{ color: THEME.textPrimary }}>
