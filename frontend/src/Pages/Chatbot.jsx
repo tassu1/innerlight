@@ -72,7 +72,7 @@ const Chatbot = () => {
 
   const fetchInitialMessages = async () => {
     try {
-      const res = await api.get('/history');
+      const res = await api.get('/chatbot/history');
       if (res.data.length > 0) {
         const formatted = res.data.map(msg => ({
           id: msg._id,
@@ -102,7 +102,7 @@ const Chatbot = () => {
 
   const fetchChatHistory = async () => {
     try {
-      const res = await api.get('/history');
+      const res = await api.get('/chatbot/history');
       setChatHistory(res.data.map(msg => ({
         id: msg._id,
         preview: msg.content.length > 50 
@@ -130,7 +130,7 @@ const Chatbot = () => {
 
   const clearAllChats = async () => {
     try {
-      await api.delete('/clear');
+      await api.delete('/chatbot/clear');
       startNewChat();
       setChatHistory([]);
     } catch (err) {
@@ -140,7 +140,7 @@ const Chatbot = () => {
 
   const deleteSingleChat = async (chatId) => {
     try {
-      await api.delete(`/history/${chatId}`);
+      await api.delete(`/chatbot/history/${chatId}`);
       fetchChatHistory();
       if (messages.some(msg => msg.id === chatId)) {
         setMessages(messages.filter(msg => msg.id !== chatId));
@@ -165,7 +165,7 @@ const Chatbot = () => {
     setLoading(true);
     
     try {
-      const res = await api.post('/ask', { message: input });
+      const res = await api.post('/chatbot/ask', { message: input });
       const botMessage = {
         id: Date.now() + 1,
         text: res.data.botReply,
