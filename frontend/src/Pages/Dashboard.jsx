@@ -1,5 +1,4 @@
-
-import  { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { 
   Smile, Frown, Meh, Laugh, Heart, 
   BarChart2, BookOpen, MessageSquare,
@@ -26,8 +25,6 @@ const THEME = {
   glass: "rgba(255, 255, 255, 0.05)"
 };
 
-
-
 const moodColors = {
   1: "#EF4444",
   2: "#F59E0B",
@@ -35,9 +32,6 @@ const moodColors = {
   4: "#10B981",
   5: "#8B5CF6"
 };
-
-
-
 
 const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState({
@@ -48,10 +42,10 @@ const Dashboard = () => {
     activeChats: [],
     aiTip: "Take 10 minutes to breathe deeply today 💗",
     stats: {
-      moodTrend: 'up',
+      moodTrend: 'stable',
       journalStreak: 0,
-      weeklyAvgMood: 3.5,
-      weeklyComparison: 12,
+      weeklyAvgMood: 0,
+      weeklyComparison: 0,
       aiSessions: 0,
       moodChartData: Array(7).fill().map((_, i) => {
         const date = new Date();
@@ -118,7 +112,21 @@ const Dashboard = () => {
 
   // Helper function to process mood data
   const processMoodData = (apiData) => {
-    const today = new Date();
+    // Handle case where no data is returned from API
+    if (!apiData || !Array.isArray(apiData)) {
+      // Return empty data structure for a new user
+      return Array(7).fill().map((_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - (6 - i));
+        return {
+          day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+          mood: null,
+          fullDate: date.toISOString(),
+          hasData: false
+        };
+      });
+    }
+    
     const result = [];
     
     for (let i = 6; i >= 0; i--) {
@@ -151,18 +159,23 @@ const Dashboard = () => {
   };
 
   // Calculate weekly average from chart data
- const calculateWeeklyAvg = (moodData) => {
-  const validEntries = moodData.filter(
-    (entry) => typeof entry.mood === "number" && !isNaN(entry.mood)
-  );
+  const calculateWeeklyAvg = (moodData) => {
+    // Check if moodData is empty or invalid
+    if (!moodData || !Array.isArray(moodData) || moodData.length === 0) {
+      return 0;
+    }
 
-  if (validEntries.length === 0) return 0;
+    const validEntries = moodData.filter(
+      (entry) => typeof entry.mood === "number" && !isNaN(entry.mood)
+    );
 
-  const sum = validEntries.reduce((total, entry) => total + entry.mood, 0);
-  const avg = sum / validEntries.length;
+    if (validEntries.length === 0) return 0;
 
-  return Number.isFinite(avg) ? Number(avg.toFixed(1)) : 0;
-};
+    const sum = validEntries.reduce((total, entry) => total + entry.mood, 0);
+    const avg = sum / validEntries.length;
+
+    return Number.isFinite(avg) ? Number(avg.toFixed(1)) : 0;
+  };
 
   // Calculate mood trend
   const calculateMoodTrend = (moodData) => {
@@ -184,10 +197,8 @@ const Dashboard = () => {
 
   // Calculate weekly comparison
   const calculateWeeklyComparison = (moodData) => {
-    // This is a simplified version - you might want to compare with last week's data
-    // For now, we'll return a static value or calculate based on trend
+    // For new users with no data, return 0
     const validEntries = moodData.filter(entry => entry.mood !== null);
-    
     if (validEntries.length < 2) return 0;
     
     // Simple calculation: if trend is up, positive percentage, if down, negative
@@ -225,13 +236,19 @@ const Dashboard = () => {
       // Fetch mood history for the chart
       const token = localStorage.getItem("token");
       if (token) {
-        const moodRes = await api.get(`/moods/history`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        if (moodRes.data && Array.isArray(moodRes.data)) {
-          // Process the data to ensure we have exactly 7 days
-          const processedData = processMoodData(moodRes.data);
+        try {
+          const moodRes = await api.get(`/moods/history`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          let processedData;
+          if (moodRes.data && Array.isArray(moodRes.data)) {
+            // Process the data to ensure we have exactly 7 days
+            processedData = processMoodData(moodRes.data);
+          } else {
+            // Handle case where API returns unexpected data format
+            processedData = processMoodData(null);
+          }
           
           setDashboardData(prev => ({
             ...prev,
@@ -241,6 +258,20 @@ const Dashboard = () => {
               weeklyAvgMood: calculateWeeklyAvg(processedData),
               moodTrend: calculateMoodTrend(processedData),
               weeklyComparison: calculateWeeklyComparison(processedData)
+            }
+          }));
+        } catch (moodErr) {
+          console.error("Error fetching mood history:", moodErr);
+          // Set default empty data if mood fetch fails
+          const processedData = processMoodData(null);
+          setDashboardData(prev => ({
+            ...prev,
+            stats: {
+              ...prev.stats,
+              moodChartData: processedData,
+              weeklyAvgMood: 0,
+              moodTrend: 'stable',
+              weeklyComparison: 0
             }
           }));
         }
@@ -270,7 +301,7 @@ const Dashboard = () => {
     try {
       setIsSubmitting(true);
       const token = localStorage.getItem("token");
-      await api.get( `/moods`,
+      await api.post( `/moods`,
         { 
           moodLevel,
           note: dashboardData.note || undefined 
@@ -809,6 +840,7 @@ const Dashboard = () => {
                 }}
                 className="text-xs flex items-center gap-1"
                 style={{ color: THEME.textSecondary }}
+                type="button"
               >
                 <RefreshCw className="w-3 h-3" />
                 New Tip
@@ -848,6 +880,7 @@ const Dashboard = () => {
                 onClick={() => navigate("/chatbot")}
                 className="text-xs flex items-center gap-1"
                 style={{ color: THEME.textSecondary }}
+                type="button"
               >
                 View All <ChevronRight className="w-3 h-3" />
               </button>
@@ -915,6 +948,7 @@ const Dashboard = () => {
                   }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
+                  type="button"
                 >
                   <MessageSquare className="w-4 h-4" />
                   Chat with InnerLight AI
