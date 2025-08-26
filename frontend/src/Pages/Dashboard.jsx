@@ -150,16 +150,18 @@ const Dashboard = () => {
   };
 
   // Calculate weekly average from chart data
-  const calculateWeeklyAvg = (moodData) => {
-    const validEntries = moodData.filter(entry => 
-      entry.mood !== null && typeof entry.mood === 'number'
-    );
-    
-    if (validEntries.length === 0) return 0;
-    
-    const sum = validEntries.reduce((total, entry) => total + entry.mood, 0);
-    return parseFloat((sum / validEntries.length).toFixed(1));
-  };
+ const calculateWeeklyAvg = (moodData) => {
+  const validEntries = moodData.filter(entry => 
+    typeof entry.mood === "number" && !isNaN(entry.mood)
+  );
+
+  if (validEntries.length === 0) return 0;
+
+  const sum = validEntries.reduce((total, entry) => total + entry.mood, 0);
+  const avg = sum / validEntries.length;
+
+  return isNaN(avg) ? 0 : parseFloat(avg.toFixed(1));
+};
 
   // Calculate mood trend
   const calculateMoodTrend = (moodData) => {
