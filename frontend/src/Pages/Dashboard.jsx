@@ -38,10 +38,6 @@ const moodColors = {
 
 
 
-const formatValue = (num) => {
-  if (num === null || num === undefined || isNaN(num)) return "0.00";
-  return Number(num).toFixed(2);
-};
 
 const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState({
@@ -165,7 +161,7 @@ const Dashboard = () => {
   const sum = validEntries.reduce((total, entry) => total + entry.mood, 0);
   const avg = sum / validEntries.length;
 
-  return Number.isFinite(avg) ? Number(avg.formatValue(1)) : 0;
+  return Number.isFinite(avg) ? Number(avg.toFixed(1)) : 0;
 };
 
   // Calculate mood trend
