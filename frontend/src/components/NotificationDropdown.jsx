@@ -1,6 +1,6 @@
 // components/NotificationDropdown.jsx
 import React from "react";
-import API from "../utils/axios";
+import api from "../utils/api";
 import { useNavigate } from "react-router-dom";
 
 const NotificationDropdown = ({ notifications, setNotifications }) => {
@@ -8,7 +8,7 @@ const NotificationDropdown = ({ notifications, setNotifications }) => {
 
   const markAsRead = async (id, link) => {
     try {
-      await API.put(`/notifications/${id}/read`);
+      await api.put(`/notifications/${id}/read`);
       setNotifications((prev) =>
         prev.map((n) =>
           n._id === id ? { ...n, isRead: true } : n
@@ -22,7 +22,7 @@ const NotificationDropdown = ({ notifications, setNotifications }) => {
 
   const clearAll = async () => {
     try {
-      await API.delete("/notifications");
+      await api.delete("/notifications");
       setNotifications([]);
     } catch (err) {
       console.error("Failed to clear notifications", err);
