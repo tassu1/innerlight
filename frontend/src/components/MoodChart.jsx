@@ -314,14 +314,19 @@ const MoodChart = ({ theme, data }) => {
             <h3 className="font-semibold" style={{ color: currentTheme.light }}>
               Mood History
             </h3>
-            {!isNaN(averageMood) && (
-              <div className="flex items-center gap-2 text-sm" style={{ color: currentTheme.light }}>
-                <span>Average:</span>
-                <span className="font-bold" style={{ color: getMoodColor(averageMood) }}>
-                  {averageMood.toFixed(1)}/5
-                </span>
-              </div>
-            )}
+            {averageMood !== null && !isNaN(averageMood) ? (
+  <div className="flex items-center gap-2 text-sm" style={{ color: currentTheme.light }}>
+    <span>Average:</span>
+    <span className="font-bold" style={{ color: getMoodColor(averageMood) }}>
+      {averageMood.toFixed(1)}/5
+    </span>
+  </div>
+) : (
+  <div className="flex items-center gap-2 text-sm italic" style={{ color: currentTheme.light }}>
+    <span>No data yet</span>
+  </div>
+)}
+
           </div>
           
           <ResponsiveContainer width="100%" height="80%">
