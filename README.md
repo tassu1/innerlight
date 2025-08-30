@@ -69,11 +69,7 @@ We welcome contributions! Here’s how you can help:
 4. **Push** to your branch
 5. **Open a Pull Request** 🎉
 
----
 
-## 📊 GitHub Activity
-
-![Contribution Snake](https://github.com/tassu1/tassu1/blob/output/github-contribution-grid-snake.svg)
 
 ---
 
