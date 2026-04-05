@@ -11,6 +11,7 @@ import Profile from "./components/Profile";
 import OtherUserProfile from "./Pages/OtherUserProfile";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import Community from "./Pages/CommunityForum";
 
 // ProtectedRoute component
 const ProtectedRoute = ({ children }) => {
@@ -104,6 +105,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Journal />
+                </ProtectedRoute>
+              }
+            />
+           <Route
+              path="/community"
+              element={
+                <ProtectedRoute>
+                  <Community />
                 </ProtectedRoute>
               }
             />
