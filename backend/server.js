@@ -118,7 +118,7 @@ app.set("io", io);
 
 // Middleware
 app.use(cors({
-  origin:  "https://innerlight.onrender.com",
+  origin:  "https://innerlightai.vercel.app",
   credentials: true,
 }));
 app.use(express.json());
