@@ -118,7 +118,7 @@ app.set("io", io);
 
 // Middleware
 app.use(cors({
-  origin:  "http://localhost:5173",
+  origin:  "https://innerlight.onrender.com",
   credentials: true,
 }));
 app.use(express.json());
