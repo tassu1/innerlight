@@ -30,19 +30,19 @@ const getMyJournals = async (req, res) => {
 // @desc    Get latest journal entry
 // @route   GET /api/journals/latest
 // @access  Private
-const getLatestJournal = async (req, res) => {
-  try {
-    const latest = await JournalEntry.findOne({ user: req.user._id }).sort({ createdAt: -1 });
+// const getLatestJournal = async (req, res) => {
+//   try {
+//     const latest = await JournalEntry.findOne({ user: req.user._id }).sort({ createdAt: -1 });
 
-    if (!latest) {
-      return res.status(404).json({ message: "No journal entry found" });
-    }
+//     if (!latest) {
+//       return res.status(404).json({ message: "No journal entry found" });
+//     }
 
-    res.json(latest);
-  } catch (error) {
-    res.status(500).json({ message: "Failed to fetch latest journal" });
-  }
-};
+//     res.json(latest);
+//   } catch (error) {
+//     res.status(500).json({ message: "Failed to fetch latest journal" });
+//   }
+// };
 
 // ✅ @desc    Delete a journal entry
 // ✅ @route   DELETE /api/journals/:id
