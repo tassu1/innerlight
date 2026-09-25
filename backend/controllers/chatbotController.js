@@ -1,6 +1,3 @@
-
-
-
 const ChatMessage = require("../models/ChatMessage");
 const axios = require("axios");
 const analyzeEmotion = require("../utils/analyzeEmotion");
@@ -161,8 +158,8 @@ Crisis: "Your safety is my top concern. Let's get you proper support."
       userMessage: message,
       botReply: reply,
       emoji,
-      emotion,
-      modelUsed
+      emotion
+      // modelUsed
     });
 
   } catch (error) {
