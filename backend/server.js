@@ -115,10 +115,11 @@ io.on("connection", (socket) => {
 
 // 🔁 Share io instance globally
 app.set("io", io);
-
+ 
+const alloworigin = ["https://innerlightai.vercel.app","http://localhost:5173"]
 // Middleware
 app.use(cors({
-  origin:  "https://innerlightai.vercel.app",
+  origin:  alloworigin,
   credentials: true,
 }));
 app.use(express.json());

@@ -120,8 +120,9 @@ const Journal = () => {
     setIsLoading(true);
     setError("");
     try {
-      const resp = await api.get("/api/journals");
-      const data = Array.isArray(resp.data) ? [...resp.data].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)) : [];
+      const resp = await api.get("/api/journals/latest");
+      console.log(resp.data)
+      const data = resp.data;
       setEntries(data);
     } catch (err) {
       handleApiError(err);
@@ -221,12 +222,13 @@ const Journal = () => {
     "How am I feeling right now?",
     "What would make today great?"
   ];
-
+   console.log(entries)
   return (
     <div className="min-h-screen" style={{ 
       backgroundColor: THEME.dark,
       backgroundImage: `linear-gradient(135deg, ${THEME.secondary} 0%, ${THEME.dark} 100%)`
     }}>
+     
       {/* Subtle background pattern */}
       <div className="fixed inset-0 opacity-5 pointer-events-none"
         style={{
@@ -528,6 +530,7 @@ const Journal = () => {
               </motion.div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
                 {filteredEntries.map((entry) => (
                   <motion.div
                     key={entry._id}
