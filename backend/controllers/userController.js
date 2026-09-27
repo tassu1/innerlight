@@ -1,10 +1,8 @@
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
-const { cloudinary, uploadFromBuffer } = require('../config/cloudinary');
 const Post = require("../models/Post"); // Make sure to require your Post model
 const Mood = require("../models/Mood"); // Make sure to require your Mood model
 
-// @desc    Register a new user
 // @route   POST /api/users/register
 const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
@@ -20,7 +18,7 @@ const registerUser = async (req, res) => {
       name, 
       email, 
       password,
-      profilePic: "default-avatar.png" // Set default profile picture
+      profilePic: "default-avatar.png"
     });
 
     res.status(201).json({
@@ -450,65 +448,7 @@ const updateBio = async (req, res) => {
   }
 };
 
-// @desc    Upload profile picture
-// @route   POST /api/users/upload-pic
-const uploadProfilePic = async (req, res) => {
-  try {
-    console.log('Upload request received from user:', req.user._id); // Debug log
-    
-    if (!req.file) {
-      return res.status(400).json({ 
-        success: false,
-        message: "No file uploaded" 
-      });
-    }
 
-    // Debug logs
-    console.log('File details:', {
-      originalname: req.file.originalname,
-      mimetype: req.file.mimetype,
-      size: req.file.size
-    });
-
-    // Upload directly from buffer
-    const result = await uploadFromBuffer(req.file.buffer, {
-      public_id: `user_${req.user._id}_${Date.now()}`,
-      folder: 'profile-pictures',
-      transformation: [{ width: 500, height: 500, crop: 'fill' }]
-    });
-
-    console.log('Cloudinary upload result:', result); // Debug log
-
-    // Update user in database
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user._id,
-      { profilePic: result.secure_url },
-      { new: true }
-    );
-
-    if (!updatedUser) {
-      throw new Error('User not found after upload');
-    }
-
-    res.json({
-      success: true,
-      profilePic: result.secure_url
-    });
-
-  } catch (error) {
-    console.error('Upload error:', {
-      message: error.message,
-      stack: error.stack,
-      user: req.user?._id
-    });
-    res.status(500).json({
-      success: false,
-      message: process.env.NODE_ENV === 'development' 
-        ? error.message 
-        : 'Failed to upload profile picture'
-    });
-  }
-};
 module.exports = {
   registerUser,
   loginUser,
@@ -521,6 +461,5 @@ module.exports = {
   getFollowStatus,
   getProfileStats,
   getAchievements,
-  updateBio,
-  uploadProfilePic
+  updateBio
 };

@@ -9,11 +9,10 @@ const {
   searchUsersByName,
   getProfileStats,
   getAchievements,
-  updateBio,
-  uploadProfilePic
+  updateBio
 } = require("../controllers/userController");
 const { protect } = require("../middlewares/authMiddleware");
-const upload = require("../config/multer"); // Updated path to config folder
+
 
 // Authentication routes
 router.post("/register", registerUser);
@@ -28,12 +27,7 @@ router.post("/friends", protect, getFriendsByIds);
 router.get("/profile/stats", protect, getProfileStats);
 router.get("/profile/achievements", protect, getAchievements);
 router.patch("/profile/bio", protect, updateBio);
-router.post(
-  "/upload-pic",
-   protect,
-  upload,       // Multer middleware
-  uploadProfilePic
-);
+
 
 // Search route
 router.get("/search", protect, searchUsersByName);
