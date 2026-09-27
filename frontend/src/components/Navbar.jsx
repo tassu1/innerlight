@@ -31,8 +31,7 @@ const NAV_LINKS = [
   { label: "Home",      path: "/dashboard" },
   { label: "Chat",      path: "/chatbot"   },
   { label: "Journal",   path: "/journal"   },
-  { label: "Resources", path: "/resources" },
-  { label: "Community", path: "/community", icon: <Users className="w-3.5 h-3.5" /> },
+  { label: "Resources", path: "/resources" }
 ];
 
 const Navbar = () => {
