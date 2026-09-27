@@ -8,10 +8,10 @@ import SelfHelp from "./Pages/SelfHelp";
 import Journal from "./Pages/Journal";
 import Chatbot from "./Pages/Chatbot";
 import Profile from "./components/Profile";
-import OtherUserProfile from "./Pages/OtherUserProfile";
+// import OtherUserProfile from "./Pages/OtherUserProfile";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import Community from "./Pages/CommunityForum";
+// import Community from "./Pages/CommunityForum";
 
 // ProtectedRoute component
 const ProtectedRoute = ({ children }) => {
@@ -76,14 +76,14 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
+            {/* <Route
               path="/profile/:id"
               element={
                 <ProtectedRoute>
                   <OtherUserProfile />
                 </ProtectedRoute>
               }
-            />
+            /> */}
             <Route
               path="/resources"
               element={
@@ -108,14 +108,14 @@ function App() {
                 </ProtectedRoute>
               }
             />
-           <Route
+           {/* <Route
               path="/community"
               element={
                 <ProtectedRoute>
                   <Community />
                 </ProtectedRoute>
               }
-            />
+            /> */}
 
             {/* Catch-all route with auth check */}
             <Route path="*" element={<AuthRedirect />} />
